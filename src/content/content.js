@@ -3,14 +3,12 @@
 
   const CONFIG = globalThis.BiliArmConfig;
   const STYLE_ID = "biliarm-runtime-style";
-  const LIGHT_OVERLAY_ID = "biliarm-light-overlay";
   const ROUTE_EVENT = "biliarm-route-change";
   const PLAYER_READY_TIMEOUT = 10000;
 
   let currentConfig = CONFIG.normalizeConfig();
   let lastUrl = location.href;
   let applyTimer = 0;
-  let hotkeyBound = false;
   let routeBound = false;
   let observer = null;
   let boundVideo = null;
@@ -85,6 +83,7 @@
     return {
       autoPlayKey: "",
       danmakuKey: "",
+      lightMode: null,
       viewModeKey: ""
     };
   }
@@ -110,21 +109,6 @@
 
   function findVideo() {
     return queryAny(selectors.video);
-  }
-
-  function isEditableTarget(target) {
-    if (!target || target === document.body) {
-      return false;
-    }
-
-    const tagName = target.tagName ? target.tagName.toLowerCase() : "";
-    return (
-      target.isContentEditable ||
-      tagName === "input" ||
-      tagName === "textarea" ||
-      tagName === "select" ||
-      target.getAttribute("role") === "textbox"
-    );
   }
 
   function getLabel(node) {
@@ -171,6 +155,22 @@
     return mode === "normal";
   }
 
+  function isBilibiliLightsOff(button) {
+    const label = getLabel(button);
+    const htmlClass = document.documentElement.className;
+    const bodyClass = document.body ? document.body.className : "";
+
+    if (label.includes("开灯") || label.includes("退出关灯")) {
+      return true;
+    }
+
+    if (label.includes("关灯")) {
+      return false;
+    }
+
+    return /light[-_]?off|lights[-_]?off|mode[-_]?light[-_]?off/i.test(`${htmlClass} ${bodyClass}`);
+  }
+
   function clickElement(node) {
     if (!node) {
       return false;
@@ -208,30 +208,7 @@
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
-      #${LIGHT_OVERLAY_ID}{
-        position:fixed!important;
-        inset:0!important;
-        display:none!important;
-        pointer-events:none!important;
-        background:rgba(0,0,0,.78)!important;
-        z-index:2147483000!important;
-      }
-      html.biliarm-lights-off #${LIGHT_OVERLAY_ID}{display:block!important;}
-      html.biliarm-lights-off ${selectors.playerContainer.join(",html.biliarm-lights-off ")}{
-        position:relative!important;
-        z-index:2147483001!important;
-      }
     `;
-  }
-
-  function ensureLightOverlay() {
-    let overlay = document.getElementById(LIGHT_OVERLAY_ID);
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = LIGHT_OVERLAY_ID;
-      overlay.setAttribute("aria-hidden", "true");
-      document.documentElement.appendChild(overlay);
-    }
   }
 
   function setDanmakuOff() {
@@ -258,8 +235,36 @@
   }
 
   function setLightsOff(off) {
-    ensureLightOverlay();
-    document.documentElement.classList.toggle("biliarm-lights-off", Boolean(off));
+    const desired = Boolean(off);
+    const button = queryAny(selectors.lightButton) || findButtonByText(["关灯", "开灯"], selectors.lightButton);
+
+    if (!button || applyState.lightMode === desired) {
+      return;
+    }
+
+    if (isBilibiliLightsOff(button) !== desired) {
+      clickElement(button);
+    }
+
+    applyState.lightMode = desired;
+  }
+
+  function scrollPlayerToCenter() {
+    const video = findVideo();
+    const player = queryAny(selectors.playerContainer) || (video ? video.closest("#bilibili-player,.bpx-player-container,.bilibili-player") : null) || video;
+
+    if (!player) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      const rect = player.getBoundingClientRect();
+      const targetTop = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: "smooth"
+      });
+    }, 300);
   }
 
   function applyViewMode() {
@@ -278,6 +283,7 @@
       if (!isButtonActive(button) && !isViewModeActive(mode, button)) {
         clickElement(button);
       }
+      scrollPlayerToCenter();
       applyState.viewModeKey = applyKey;
       return;
     }
@@ -322,50 +328,6 @@
     if (currentConfig.enabled && currentConfig.player.exitFullscreenOnEnded) {
       exitFullscreenIfNeeded();
     }
-  }
-
-  function togglePlayPause() {
-    const video = findVideo();
-    if (!video) {
-      return false;
-    }
-
-    if (video.paused || video.ended) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-
-    return true;
-  }
-
-  function handleKeydown(event) {
-    if (
-      !currentConfig.enabled ||
-      !currentConfig.hotkeys.enabled ||
-      !currentConfig.hotkeys.spacePlayPause ||
-      event.code !== "Space" ||
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey ||
-      isEditableTarget(event.target)
-    ) {
-      return;
-    }
-
-    if (togglePlayPause()) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  function bindHotkeys() {
-    if (hotkeyBound) {
-      return;
-    }
-
-    hotkeyBound = true;
-    document.addEventListener("keydown", handleKeydown, true);
   }
 
   function bindRouteWatcher() {
@@ -447,7 +409,6 @@
     setRuntimeStyle();
 
     if (!currentConfig.enabled) {
-      setLightsOff(false);
       return;
     }
 
@@ -472,8 +433,8 @@
 
       if (currentConfig.light.autoToggleOnScroll) {
         setLightsOff(window.scrollY > 120);
-      } else {
-        setLightsOff(Boolean(currentConfig.light.defaultLightsOff));
+      } else if (currentConfig.light.defaultLightsOff) {
+        setLightsOff(true);
       }
     });
   }
@@ -485,7 +446,6 @@
 
   async function start() {
     currentConfig = await CONFIG.readStorage();
-    bindHotkeys();
     bindRouteWatcher();
     bindDomObserver();
     bindScrollHandler();

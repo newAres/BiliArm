@@ -5,6 +5,7 @@
   const controls = Array.from(document.querySelectorAll("[data-config]"));
   const statusText = document.getElementById("statusText");
   const resetButton = document.getElementById("resetButton");
+  const closeOptions = document.getElementById("closeOptions");
   let config = CONFIG.normalizeConfig();
   let statusTimer = 0;
 
@@ -58,6 +59,12 @@
     render();
     showStatus("已恢复默认设置");
   });
+
+  if (closeOptions) {
+    closeOptions.addEventListener("click", () => {
+      window.close();
+    });
+  }
 
   CONFIG.onConfigChanged((nextConfig) => {
     config = nextConfig;

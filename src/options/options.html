@@ -6,46 +6,22 @@
     <title>BiliArm 设置</title>
     <link rel="stylesheet" href="../common/settings.css">
   </head>
-  <body>
-    <main class="app">
-      <header class="header">
-        <div>
-          <h1 class="title">BiliArm 设置</h1>
-          <p class="subtitle">按自己的观看习惯开启功能，配置会自动保存。</p>
-        </div>
+  <body class="settings-page">
+    <main class="app settings-app">
+      <header class="settings-header">
+        <button class="icon-button" id="closeOptions" type="button" aria-label="关闭设置">×</button>
+        <h1 class="settings-title">BiliArm 设置</h1>
         <label class="switch" title="插件总开关">
           <input type="checkbox" data-config="enabled">
           <span class="switch-track"></span>
         </label>
       </header>
 
-      <section class="panel">
-        <h2 class="panel-title">快捷键</h2>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">启用快捷键</span>
-            <span class="setting-desc">开启后接管指定的播放器快捷键。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="hotkeys.enabled">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">空格键播放或暂停</span>
-            <span class="setting-desc">避免空格键在播放页触发页面滚动。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="hotkeys.spacePlayPause">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-      </section>
+      <p class="settings-summary">按自己的观看习惯开启功能，配置会自动保存。</p>
 
-      <section class="panel">
-        <h2 class="panel-title">播放</h2>
-        <div class="setting">
+      <section class="setting-group">
+        <h2 class="group-title">播放</h2>
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">自动播放</span>
             <span class="setting-desc">进入播放页后尝试自动开始播放。</span>
@@ -55,7 +31,7 @@
             <span class="switch-track"></span>
           </label>
         </div>
-        <div class="setting">
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">默认显示模式</span>
             <span class="setting-desc">进入播放页后自动切换到指定显示模式。</span>
@@ -66,7 +42,7 @@
             <option value="webFullscreen">网页全屏</option>
           </select>
         </div>
-        <div class="setting">
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">播放结束退出全屏</span>
             <span class="setting-desc">视频结束后退出全屏或网页全屏。</span>
@@ -78,9 +54,9 @@
         </div>
       </section>
 
-      <section class="panel">
-        <h2 class="panel-title">弹幕</h2>
-        <div class="setting">
+      <section class="setting-group">
+        <h2 class="group-title">弹幕</h2>
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">默认关闭弹幕</span>
             <span class="setting-desc">进入播放页后自动关闭弹幕。</span>
@@ -90,7 +66,7 @@
             <span class="switch-track"></span>
           </label>
         </div>
-        <div class="setting">
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">屏蔽底部弹幕</span>
             <span class="setting-desc">尽量隐藏底部弹幕，减少字幕遮挡。</span>
@@ -102,22 +78,22 @@
         </div>
       </section>
 
-      <section class="panel">
-        <h2 class="panel-title">灯光</h2>
-        <div class="setting">
+      <section class="setting-group">
+        <h2 class="group-title">灯光</h2>
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">默认关灯</span>
-            <span class="setting-desc">进入播放页后自动开启沉浸观看效果。</span>
+            <span class="setting-desc">进入播放页后自动开启 B 站关灯模式。</span>
           </span>
           <label class="switch">
             <input type="checkbox" data-config="light.defaultLightsOff">
             <span class="switch-track"></span>
           </label>
         </div>
-        <div class="setting">
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">滚动自动开关灯</span>
-            <span class="setting-desc">滚动页面时自动调整关灯状态。</span>
+            <span class="setting-desc">滚动页面时自动调整 B 站关灯状态。</span>
           </span>
           <label class="switch">
             <input type="checkbox" data-config="light.autoToggleOnScroll">
@@ -126,9 +102,9 @@
         </div>
       </section>
 
-      <section class="panel">
-        <h2 class="panel-title">页面清理</h2>
-        <div class="setting">
+      <section class="setting-group">
+        <h2 class="group-title">页面清理</h2>
+        <div class="setting setting-card">
           <span class="setting-main">
             <span class="setting-name">去除大屏轮播图</span>
             <span class="setting-desc">隐藏首页或大屏页面里的轮播内容。</span>
@@ -140,7 +116,7 @@
         </div>
       </section>
 
-      <div class="actions">
+      <div class="actions settings-actions">
         <button class="button" id="resetButton" type="button">恢复默认设置</button>
         <span class="status" id="statusText"></span>
       </div>

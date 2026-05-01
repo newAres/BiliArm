@@ -8,8 +8,8 @@
     version: CONFIG_VERSION,
     enabled: true,
     hotkeys: {
-      enabled: true,
-      spacePlayPause: true
+      enabled: false,
+      spacePlayPause: false
     },
     player: {
       defaultDanmakuOff: false,

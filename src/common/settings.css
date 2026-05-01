@@ -12,6 +12,17 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
 }
 
+.settings-page {
+  color-scheme: dark;
+  --bg: #1b1b1b;
+  --panel: #242424;
+  --text: #f3f4f6;
+  --muted: #b7bbc2;
+  --line: rgba(255, 255, 255, 0.06);
+  --primary: #76d900;
+  --primary-strong: #8bea18;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -33,6 +44,113 @@ select {
   width: min(920px, calc(100vw - 32px));
   margin: 0 auto;
   padding: 28px 0 36px;
+}
+
+.settings-app {
+  width: min(736px, 100vw);
+  min-height: 100vh;
+  padding: 0 40px 32px;
+  background: var(--bg);
+}
+
+.settings-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 44px 1fr 54px;
+  align-items: center;
+  height: 62px;
+  margin: 0 -40px 8px;
+  padding: 0 40px;
+  background: #1f1f1f;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-title {
+  margin: 0;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.settings-summary {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #e6e6e6;
+  font-size: 34px;
+  line-height: 30px;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.setting-group {
+  margin: 18px 0;
+}
+
+.group-title {
+  margin: 18px 12px 8px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.setting-card {
+  min-height: 60px;
+  margin-top: 10px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.settings-page .setting-name {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.settings-page .setting-desc {
+  max-width: 480px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.settings-page select {
+  min-width: 84px;
+  border: 0;
+  background: #303030;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.settings-page .switch-track {
+  background: #4a4a4a;
+}
+
+.settings-page .switch input:checked + .switch-track {
+  background: var(--primary);
+}
+
+.settings-actions {
+  margin: 20px 0 0;
+}
+
+.settings-page .button {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #2b2b2b;
+  color: #f3f4f6;
 }
 
 .popup-app {
@@ -257,4 +375,21 @@ select {
 
 .popup-app .subtitle {
   white-space: nowrap;
+}
+
+.settings-page .settings-app {
+  width: min(736px, 100vw);
+  padding: 0 40px 32px;
+}
+
+@media (max-width: 640px) {
+  .settings-page .settings-app {
+    width: 100vw;
+    padding: 0 20px 28px;
+  }
+
+  .settings-page .settings-header {
+    margin: 0 -20px 8px;
+    padding: 0 20px;
+  }
 }
