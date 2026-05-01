@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  // 设置页负责把声明式控件 data-config 映射到统一配置对象。
   const CONFIG = globalThis.BiliArmConfig;
   const controls = Array.from(document.querySelectorAll("[data-config]"));
   const statusText = document.getElementById("statusText");
@@ -9,10 +10,12 @@
   let config = CONFIG.normalizeConfig();
   let statusTimer = 0;
 
+  // 根据 dotted path 从嵌套配置中取值。
   function getByPath(source, path) {
     return path.split(".").reduce((value, key) => (value ? value[key] : undefined), source);
   }
 
+  // 保存反馈只短暂展示，避免状态文本长期占据注意力。
   function showStatus(text, isError) {
     window.clearTimeout(statusTimer);
     statusText.textContent = text;
@@ -25,6 +28,7 @@
     }
   }
 
+  // 用配置刷新所有控件状态；总开关关闭时禁用其它配置但保留值。
   function render() {
     controls.forEach((control) => {
       const path = control.dataset.config;
@@ -40,6 +44,7 @@
     });
   }
 
+  // 任一控件变化后只写入对应字段，减少并发编辑时互相覆盖。
   async function saveControl(control) {
     const path = control.dataset.config;
     const value = control.type === "checkbox" ? control.checked : control.value;

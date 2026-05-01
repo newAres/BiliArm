@@ -126,6 +126,117 @@
         </div>
       </section>
 
+      <section class="setting-group">
+        <h2 class="group-title">Better Bilibili 复刻</h2>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">微调布局</span>
+            <span class="setting-desc">优化首页和播放页的间距、布局稳定性和部分浮层。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.tweakLayout">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">净化页面</span>
+            <span class="setting-desc">隐藏广告、活动横幅、推广位和播放结束覆盖层。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.purifyPage">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">显示评论 IP 属地</span>
+            <span class="setting-desc">尽量恢复评论区已渲染的 IP 属地标签显示。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.showCommentIp">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">隐藏置顶广告评论</span>
+            <span class="setting-desc">隐藏带推广、广告、抽奖等关键词的置顶评论。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.hideTopAdComments">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">显示视频话题标签</span>
+            <span class="setting-desc">尽量恢复页面中已存在但被隐藏的话题标签区域。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.showTopicTags">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">优选播放链接</span>
+            <span class="setting-desc">预留开关，后续通过主世界脚本优化播放链接选择。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.preferPlaybackUrl">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">本地黑名单过滤</span>
+            <span class="setting-desc">按 UP 名、标题或卡片文本过滤首页和播放页推荐。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.localBlacklistEnabled">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card setting-stack">
+          <span class="setting-main">
+            <span class="setting-name">本地黑名单</span>
+            <span class="setting-desc">一行一个关键词或 UP 名。点击卡片上的“本地拉黑”也会写入这里。</span>
+          </span>
+          <textarea class="setting-textarea" data-config="blacklist.localText" rows="6" placeholder="示例：&#10;某个UP主&#10;不想看的关键词"></textarea>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">首页悬停快速拉黑</span>
+            <span class="setting-desc">鼠标悬停视频卡片时显示本地拉黑按钮。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.homeHoverBlacklist">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">播放页四击推荐卡片拉黑</span>
+            <span class="setting-desc">短时间内连续点击推荐卡片四次，将卡片文本加入本地黑名单。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.playerQuadClickBlacklist">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting setting-card">
+          <span class="setting-main">
+            <span class="setting-name">首页三击回顶部</span>
+            <span class="setting-desc">在首页空白区域连续点击三次后滚动到页面顶部。</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="betterBilibili.homeTripleClickTop">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </section>
+
       <div class="actions settings-actions">
         <button class="button" id="resetButton" type="button">恢复默认设置</button>
         <span class="status" id="statusText"></span>

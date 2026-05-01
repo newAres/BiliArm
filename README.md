@@ -50,6 +50,8 @@ BiliArm 是一款用于优化哔哩哔哩网页端观看体验的浏览器插件
 
 详细设计请查看：[plan.md](./plan.md)
 
+Better Bilibili 功能复刻清单请查看：[docs/better-bilibili-replica.md](./docs/better-bilibili-replica.md)
+
 ## 计划支持的页面
 
 - 哔哩哔哩普通视频页

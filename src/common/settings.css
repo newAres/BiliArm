@@ -1,4 +1,5 @@
 :root {
+  /* 默认变量服务于 popup，options 页面会用 .settings-page 覆盖成暗色。 */
   color-scheme: light;
   --bg: #f6f7f9;
   --panel: #ffffff;
@@ -13,6 +14,7 @@
 }
 
 .settings-page {
+  /* 参考 set.png 的深色列表设置面板。 */
   color-scheme: dark;
   --bg: #1b1b1b;
   --panel: #242424;
@@ -36,7 +38,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -54,6 +57,7 @@ select {
 }
 
 .settings-header {
+  /* 设置页标题栏固定在顶部，接近原生弹窗设置页手感。 */
   position: sticky;
   top: 0;
   z-index: 2;
@@ -108,12 +112,30 @@ select {
 }
 
 .setting-card {
+  /* 每个设置项独立成卡片，避免大块嵌套卡片造成视觉拥挤。 */
   min-height: 60px;
   margin-top: 10px;
   padding: 12px 18px;
   border: 0;
   border-radius: 10px;
   background: var(--panel);
+}
+
+.setting-stack {
+  display: block;
+}
+
+.setting-textarea {
+  width: 100%;
+  min-height: 120px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  resize: vertical;
+  background: #303030;
+  color: var(--text);
+  line-height: 1.6;
 }
 
 .settings-page .setting-name {
@@ -226,6 +248,7 @@ select {
 }
 
 .switch {
+  /* 自绘开关，保证 popup 和 options 的控件风格一致。 */
   position: relative;
   display: inline-flex;
   align-items: center;
