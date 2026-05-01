@@ -3,6 +3,7 @@
 
   const CONFIG = globalThis.BiliArmConfig;
   const STYLE_ID = "biliarm-runtime-style";
+  const PRELOAD_STYLE_ID = "biliarm-preload-style";
   const ROUTE_EVENT = "biliarm-route-change";
   const PLAYER_READY_TIMEOUT = 10000;
 
@@ -12,6 +13,8 @@
   let routeBound = false;
   let observer = null;
   let boundVideo = null;
+  let feedRefreshBound = false;
+  let pendingFeedCards = [];
   let applyState = createApplyState();
 
   const selectors = {
@@ -37,8 +40,18 @@
       ".bilibili-player-video-btn-web-fullscreen"
     ],
     lightButton: [
+      "[aria-label*='关灯']",
+      "[aria-label*='开灯']",
+      "[title*='关灯']",
+      "[title*='开灯']",
+      "[data-title*='关灯']",
+      "[data-title*='开灯']",
+      "[data-tooltip*='关灯']",
+      "[data-tooltip*='开灯']",
       ".bpx-player-ctrl-light",
-      ".bilibili-player-video-btn-light"
+      ".bpx-player-ctrl-btn[aria-label*='灯']",
+      ".bilibili-player-video-btn-light",
+      ".bilibili-player-video-btn-light-off"
     ],
     playerContainer: [
       "#bilibili-player",
@@ -65,6 +78,8 @@
     cleanupCarousel: [
       ".recommended-swipe",
       ".bili-feed4-layout .recommended-swipe",
+      ".bili-feed4-layout .carousel-area",
+      ".bili-feed4-layout .banner-card",
       ".bili-grid .recommended-swipe",
       ".banner-card",
       ".carousel-area",
@@ -76,6 +91,25 @@
       ".bilibili-player-video-danmaku .danmaku-item[data-mode='bottom']",
       ".bilibili-player-video-danmaku .mode-bottom",
       ".bilibili-danmaku-bottom"
+    ],
+    homeFeedContainer: [
+      ".bili-feed4-layout",
+      ".bili-grid",
+      ".recommended-container_floor-aside",
+      ".container",
+      "main"
+    ],
+    homeFeedCard: [
+      ".bili-feed4-layout .bili-video-card",
+      ".bili-grid .bili-video-card",
+      ".feed-card",
+      ".bili-video-card"
+    ],
+    homeFeedRefreshButton: [
+      ".feed-roll-btn",
+      ".primary-btn.roll-btn",
+      "[class*='roll'][class*='btn']",
+      "[class*='refresh']"
     ]
   };
 
@@ -90,6 +124,10 @@
 
   function resetApplyState() {
     applyState = createApplyState();
+  }
+
+  function appendStyleElement(style) {
+    (document.head || document.documentElement).appendChild(style);
   }
 
   function queryAny(list, root) {
@@ -120,6 +158,8 @@
       node.getAttribute("aria-label"),
       node.getAttribute("title"),
       node.getAttribute("data-title"),
+      node.getAttribute("data-tooltip"),
+      node.getAttribute("data-text"),
       node.textContent
     ]
       .filter(Boolean)
@@ -176,8 +216,9 @@
       return false;
     }
 
-    const target = node.closest("button,[role='button'],label,.bpx-player-ctrl-btn") || node;
+    const target = node.closest("button,[role='button'],label,a,.bpx-player-ctrl-btn,.bilibili-player-video-btn") || node;
     target.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
     target.click();
     return true;
   }
@@ -194,12 +235,33 @@
     });
   }
 
+  function findNativeControlByText(texts, fallbackSelectors) {
+    const candidates = [
+      ...queryAll(fallbackSelectors || []),
+      ...Array.from(
+        document.querySelectorAll(
+          "button,[role='button'],a,[title],[aria-label],[data-title],[data-tooltip],.bpx-player-ctrl-btn,.bilibili-player-video-btn"
+        )
+      )
+    ];
+
+    return candidates.find((node) => {
+      const label = getLabel(node);
+      return texts.some((text) => label.includes(text));
+    });
+  }
+
   function setRuntimeStyle() {
     let style = document.getElementById(STYLE_ID);
     if (!style) {
       style = document.createElement("style");
       style.id = STYLE_ID;
-      document.documentElement.appendChild(style);
+      appendStyleElement(style);
+    }
+
+    const preloadStyle = document.getElementById(PRELOAD_STYLE_ID);
+    if (preloadStyle) {
+      preloadStyle.remove();
     }
 
     const hideCarousel = currentConfig.enabled && currentConfig.pageCleanup.removeLargeCarousel;
@@ -208,7 +270,19 @@
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
+      .biliarm-preserved-feed-card{display:block!important;}
     `;
+  }
+
+  function setPreloadCleanupStyle() {
+    if (document.getElementById(PRELOAD_STYLE_ID)) {
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = PRELOAD_STYLE_ID;
+    style.textContent = `${selectors.cleanupCarousel.join(",")}{display:none!important;}`;
+    appendStyleElement(style);
   }
 
   function setDanmakuOff() {
@@ -236,9 +310,16 @@
 
   function setLightsOff(off) {
     const desired = Boolean(off);
-    const button = queryAny(selectors.lightButton) || findButtonByText(["关灯", "开灯"], selectors.lightButton);
+    const player = queryAny(selectors.playerContainer);
 
-    if (!button || applyState.lightMode === desired) {
+    if (player) {
+      player.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      player.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 120, clientY: 120 }));
+    }
+
+    const button = queryAny(selectors.lightButton) || findNativeControlByText(["关灯", "开灯"], selectors.lightButton);
+
+    if (!button) {
       return;
     }
 
@@ -298,6 +379,86 @@
       }
       applyState.viewModeKey = applyKey;
     }
+  }
+
+  function isHomePage() {
+    return location.hostname === "www.bilibili.com" && (location.pathname === "/" || location.pathname === "");
+  }
+
+  function findHomeFeedContainer() {
+    const cards = queryAll(selectors.homeFeedCard);
+    if (cards.length > 0) {
+      return cards[0].parentElement;
+    }
+
+    return queryAny(selectors.homeFeedContainer);
+  }
+
+  function cloneCurrentHomeFeedCards() {
+    if (!isHomePage() || !currentConfig.enabled || !currentConfig.pageCleanup.keepHomeFeedOnRefresh) {
+      return [];
+    }
+
+    return queryAll(selectors.homeFeedCard)
+      .filter((card) => !card.classList.contains("biliarm-preserved-feed-card"))
+      .slice(0, 24)
+      .map((card) => {
+        const clone = card.cloneNode(true);
+        clone.classList.add("biliarm-preserved-feed-card");
+        clone.setAttribute("data-biliarm-preserved", "true");
+        return clone;
+      });
+  }
+
+  function appendPreservedFeedCards() {
+    if (pendingFeedCards.length === 0) {
+      return;
+    }
+
+    const container = findHomeFeedContainer();
+    if (!container) {
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    pendingFeedCards.forEach((card) => fragment.appendChild(card));
+    container.appendChild(fragment);
+    pendingFeedCards = [];
+  }
+
+  function isFeedRefreshTrigger(node) {
+    if (!node) {
+      return false;
+    }
+
+    const trigger = node.closest("button,[role='button'],a,.feed-roll-btn,.primary-btn,[class*='roll'],[class*='refresh']");
+    if (!trigger) {
+      return false;
+    }
+
+    const label = getLabel(trigger);
+    return label.includes("换一换") || label.includes("换一批") || /roll|refresh/i.test(String(trigger.className || ""));
+  }
+
+  function bindHomeFeedRefreshKeeper() {
+    if (feedRefreshBound) {
+      return;
+    }
+
+    feedRefreshBound = true;
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (!currentConfig.enabled || !currentConfig.pageCleanup.keepHomeFeedOnRefresh || !isFeedRefreshTrigger(event.target)) {
+          return;
+        }
+
+        pendingFeedCards = cloneCurrentHomeFeedCards();
+        window.setTimeout(appendPreservedFeedCards, 450);
+        window.setTimeout(appendPreservedFeedCards, 1000);
+      },
+      true
+    );
   }
 
   function exitFullscreenIfNeeded() {
@@ -435,6 +596,7 @@
         setLightsOff(window.scrollY > 120);
       } else if (currentConfig.light.defaultLightsOff) {
         setLightsOff(true);
+        window.setTimeout(() => setLightsOff(true), 800);
       }
     });
   }
@@ -445,10 +607,12 @@
   }
 
   async function start() {
+    setPreloadCleanupStyle();
     currentConfig = await CONFIG.readStorage();
     bindRouteWatcher();
     bindDomObserver();
     bindScrollHandler();
+    bindHomeFeedRefreshKeeper();
     scheduleApply(0);
 
     CONFIG.onConfigChanged((nextConfig) => {

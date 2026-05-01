@@ -25,7 +25,8 @@
       autoToggleOnScroll: false
     },
     pageCleanup: {
-      removeLargeCarousel: false
+      removeLargeCarousel: false,
+      keepHomeFeedOnRefresh: false
     }
   };
 
