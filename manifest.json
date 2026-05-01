@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "BiliArm",
+  "version": "0.1.0",
+  "description": "优化哔哩哔哩网页端观看体验，支持快捷键、弹幕、关灯、显示模式和页面清理等增强能力。",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.bilibili.com/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_title": "BiliArm",
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bilibili.com/*"
+      ],
+      "js": [
+        "src/common/config.js",
+        "src/content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

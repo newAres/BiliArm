@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>BiliArm</title>
+    <link rel="stylesheet" href="../common/settings.css">
+  </head>
+  <body>
+    <main class="popup-app">
+      <header class="header">
+        <div>
+          <h1 class="title">BiliArm</h1>
+          <p class="subtitle">快速切换常用功能。</p>
+        </div>
+        <label class="switch" title="插件总开关">
+          <input type="checkbox" data-config="enabled">
+          <span class="switch-track"></span>
+        </label>
+      </header>
+
+      <section class="panel">
+        <div class="setting">
+          <span class="setting-main">
+            <span class="setting-name">空格键播放或暂停</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="hotkeys.spacePlayPause">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting">
+          <span class="setting-main">
+            <span class="setting-name">默认关闭弹幕</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="player.defaultDanmakuOff">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting">
+          <span class="setting-main">
+            <span class="setting-name">自动播放</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="player.autoPlay">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting">
+          <span class="setting-main">
+            <span class="setting-name">默认关灯</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" data-config="light.defaultLightsOff">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="setting">
+          <span class="setting-main">
+            <span class="setting-name">显示模式</span>
+          </span>
+          <select data-config="player.defaultViewMode">
+            <option value="normal">正常</option>
+            <option value="wide">宽屏</option>
+            <option value="webFullscreen">网页全屏</option>
+          </select>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="button button-primary" id="openOptions" type="button">完整设置</button>
+        <span class="status" id="statusText"></span>
+      </div>
+    </main>
+
+    <script src="../common/config.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
