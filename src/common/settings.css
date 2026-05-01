@@ -245,3 +245,16 @@ select {
     flex-direction: column;
   }
 }
+
+.popup-app .header {
+  flex-direction: row;
+  align-items: center;
+}
+
+.popup-app .header > div {
+  min-width: 0;
+}
+
+.popup-app .subtitle {
+  white-space: nowrap;
+}

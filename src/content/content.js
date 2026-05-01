@@ -3,6 +3,7 @@
 
   const CONFIG = globalThis.BiliArmConfig;
   const STYLE_ID = "biliarm-runtime-style";
+  const LIGHT_OVERLAY_ID = "biliarm-light-overlay";
   const ROUTE_EVENT = "biliarm-route-change";
   const PLAYER_READY_TIMEOUT = 10000;
 
@@ -13,6 +14,7 @@
   let routeBound = false;
   let observer = null;
   let boundVideo = null;
+  let applyState = createApplyState();
 
   const selectors = {
     video: [
@@ -40,6 +42,28 @@
       ".bpx-player-ctrl-light",
       ".bilibili-player-video-btn-light"
     ],
+    playerContainer: [
+      "#bilibili-player",
+      ".bpx-player-container",
+      ".bpx-player-primary-area",
+      ".bilibili-player",
+      ".bilibili-player-video"
+    ],
+    wideActive: [
+      ".bpx-player-container[data-screen='wide']",
+      ".bpx-player-container[data-screen='widescreen']",
+      ".bpx-player-container.mode-widescreen",
+      ".bilibili-player.mode-widescreen",
+      ".player-mode-widescreen"
+    ],
+    webFullscreenActive: [
+      ".bpx-player-container[data-screen='web']",
+      ".bpx-player-container[data-screen='webfullscreen']",
+      ".bpx-player-container.mode-webscreen",
+      ".bpx-player-container.mode-web-fullscreen",
+      ".bilibili-player.mode-webscreen",
+      ".player-mode-webfullscreen"
+    ],
     cleanupCarousel: [
       ".recommended-swipe",
       ".bili-feed4-layout .recommended-swipe",
@@ -56,6 +80,18 @@
       ".bilibili-danmaku-bottom"
     ]
   };
+
+  function createApplyState() {
+    return {
+      autoPlayKey: "",
+      danmakuKey: "",
+      viewModeKey: ""
+    };
+  }
+
+  function resetApplyState() {
+    applyState = createApplyState();
+  }
 
   function queryAny(list, root) {
     const scope = root || document;
@@ -121,6 +157,20 @@
     );
   }
 
+  function isViewModeActive(mode, button) {
+    const label = getLabel(button);
+
+    if (mode === "wide") {
+      return label.includes("退出宽屏") || Boolean(queryAny(selectors.wideActive));
+    }
+
+    if (mode === "webFullscreen") {
+      return label.includes("退出网页全屏") || label.includes("退出全屏") || Boolean(queryAny(selectors.webFullscreenActive));
+    }
+
+    return mode === "normal";
+  }
+
   function clickElement(node) {
     if (!node) {
       return false;
@@ -158,7 +208,30 @@
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
+      #${LIGHT_OVERLAY_ID}{
+        position:fixed!important;
+        inset:0!important;
+        display:none!important;
+        pointer-events:none!important;
+        background:rgba(0,0,0,.78)!important;
+        z-index:2147483000!important;
+      }
+      html.biliarm-lights-off #${LIGHT_OVERLAY_ID}{display:block!important;}
+      html.biliarm-lights-off ${selectors.playerContainer.join(",html.biliarm-lights-off ")}{
+        position:relative!important;
+        z-index:2147483001!important;
+      }
     `;
+  }
+
+  function ensureLightOverlay() {
+    let overlay = document.getElementById(LIGHT_OVERLAY_ID);
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = LIGHT_OVERLAY_ID;
+      overlay.setAttribute("aria-hidden", "true");
+      document.documentElement.appendChild(overlay);
+    }
   }
 
   function setDanmakuOff() {
@@ -185,29 +258,39 @@
   }
 
   function setLightsOff(off) {
-    const labels = off ? ["关灯"] : ["开灯"];
-    const button = findButtonByText(labels, selectors.lightButton);
-    if (button) {
-      clickElement(button);
-    }
+    ensureLightOverlay();
+    document.documentElement.classList.toggle("biliarm-lights-off", Boolean(off));
   }
 
   function applyViewMode() {
     const mode = currentConfig.player.defaultViewMode;
+    const applyKey = `${location.href}:${mode}`;
+
+    if (applyState.viewModeKey === applyKey) {
+      return;
+    }
 
     if (mode === "wide") {
       const button = queryAny(selectors.wideButton) || findButtonByText(["宽屏"], selectors.wideButton);
-      if (button && !isButtonActive(button)) {
+      if (!button) {
+        return;
+      }
+      if (!isButtonActive(button) && !isViewModeActive(mode, button)) {
         clickElement(button);
       }
+      applyState.viewModeKey = applyKey;
       return;
     }
 
     if (mode === "webFullscreen") {
       const button = queryAny(selectors.webFullscreenButton) || findButtonByText(["网页全屏"], selectors.webFullscreenButton);
-      if (button && !isButtonActive(button)) {
+      if (!button) {
+        return;
+      }
+      if (!isButtonActive(button) && !isViewModeActive(mode, button)) {
         clickElement(button);
       }
+      applyState.viewModeKey = applyKey;
     }
   }
 
@@ -304,6 +387,7 @@
     window.addEventListener(ROUTE_EVENT, () => {
       if (lastUrl !== location.href) {
         lastUrl = location.href;
+        resetApplyState();
         scheduleApply(350);
       }
     });
@@ -363,17 +447,22 @@
     setRuntimeStyle();
 
     if (!currentConfig.enabled) {
+      setLightsOff(false);
       return;
     }
 
     waitForPlayer((video) => {
       bindEndedHandler(video);
 
-      if (currentConfig.player.autoPlay && video.paused) {
+      const autoPlayKey = `${location.href}:${video.currentSrc || "video"}`;
+      if (currentConfig.player.autoPlay && video.paused && applyState.autoPlayKey !== autoPlayKey) {
+        applyState.autoPlayKey = autoPlayKey;
         video.play().catch(() => {});
       }
 
-      if (currentConfig.player.defaultDanmakuOff) {
+      const danmakuKey = `${location.href}:danmaku-off`;
+      if (currentConfig.player.defaultDanmakuOff && applyState.danmakuKey !== danmakuKey) {
+        applyState.danmakuKey = danmakuKey;
         setDanmakuOff();
       }
 
@@ -381,8 +470,10 @@
         applyViewMode();
       }
 
-      if (currentConfig.light.defaultLightsOff) {
-        setLightsOff(true);
+      if (currentConfig.light.autoToggleOnScroll) {
+        setLightsOff(window.scrollY > 120);
+      } else {
+        setLightsOff(Boolean(currentConfig.light.defaultLightsOff));
       }
     });
   }
@@ -402,6 +493,7 @@
 
     CONFIG.onConfigChanged((nextConfig) => {
       currentConfig = nextConfig;
+      resetApplyState();
       scheduleApply(0);
     });
   }
