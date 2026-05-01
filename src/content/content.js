@@ -15,9 +15,6 @@
   let observer = null;
   let boundVideo = null;
   let feedRefreshBound = false;
-  let cardActionBound = false;
-  let tripleClickState = { count: 0, time: 0 };
-  let quadClickState = { card: null, count: 0, time: 0 };
   let pendingFeedCards = [];
   let applyState = createApplyState();
 
@@ -108,36 +105,13 @@
       ".bili-feed4-layout .bili-video-card",
       ".bili-grid .bili-video-card",
       ".feed-card",
-      ".bili-video-card",
-      ".video-page-card-small",
-      ".recommend-video-card"
+      ".bili-video-card"
     ],
     homeFeedRefreshButton: [
       ".feed-roll-btn",
       ".primary-btn.roll-btn",
       "[class*='roll'][class*='btn']",
       "[class*='refresh']"
-    ],
-    recommendCard: [
-      ".video-page-card-small",
-      ".recommend-video-card",
-      ".bili-video-card",
-      ".feed-card"
-    ],
-    commentItem: [
-      ".reply-item",
-      ".root-reply-container",
-      ".sub-reply-item"
-    ],
-    topComment: [
-      ".reply-item:first-child",
-      ".root-reply-container:first-child"
-    ],
-    topicTag: [
-      ".video-tag-container",
-      ".tag-panel",
-      ".video-info-detail-list",
-      "[class*='tag']"
     ]
   };
 
@@ -292,73 +266,6 @@
     });
   }
 
-  // 把用户输入的一行一个关键词整理成数组。
-  function getLocalBlacklistTerms() {
-    return String(currentConfig.blacklist.localText || "")
-      .split(/\r?\n/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  // 从卡片中提取标题、UP 名和其它可见文本，作为本地黑名单匹配依据。
-  function getCardText(card) {
-    if (!card) {
-      return "";
-    }
-
-    return [
-      card.getAttribute("title"),
-      card.getAttribute("aria-label"),
-      card.querySelector(".bili-video-card__info--tit")?.textContent,
-      card.querySelector(".bili-video-card__info--author")?.textContent,
-      card.querySelector(".up-name")?.textContent,
-      card.querySelector(".name")?.textContent,
-      card.textContent
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  // 将关键词追加到本地黑名单，避免重复写入同一项。
-  async function addLocalBlacklistTerm(term) {
-    const normalized = String(term || "").replace(/\s+/g, " ").trim();
-    if (!normalized) {
-      return;
-    }
-
-    const terms = getLocalBlacklistTerms();
-    if (terms.some((item) => item === normalized)) {
-      return;
-    }
-
-    terms.push(normalized);
-    currentConfig = await CONFIG.setConfigValue("blacklist.localText", terms.join("\n"));
-    applyBetterBilibiliFeatures();
-  }
-
-  // 按本地黑名单隐藏首页和播放页的推荐卡片。
-  function filterCardsByBlacklist() {
-    const better = currentConfig.betterBilibili;
-    if (!currentConfig.enabled || !better.localBlacklistEnabled || !better.filterRecommendations) {
-      queryAll([...selectors.homeFeedCard, ...selectors.recommendCard]).forEach((card) => {
-        card.hidden = false;
-      });
-      return;
-    }
-
-    const terms = getLocalBlacklistTerms();
-    if (terms.length === 0) {
-      return;
-    }
-
-    queryAll([...selectors.homeFeedCard, ...selectors.recommendCard]).forEach((card) => {
-      const cardText = getCardText(card);
-      card.hidden = terms.some((term) => cardText.includes(term));
-    });
-  }
-
   function setRuntimeStyle() {
     let style = document.getElementById(STYLE_ID);
     if (!style) {
@@ -374,63 +281,11 @@
 
     const hideCarousel = currentConfig.enabled && currentConfig.pageCleanup.removeLargeCarousel;
     const hideBottomDanmaku = currentConfig.enabled && currentConfig.danmaku.hideBottomDanmaku;
-    const better = currentConfig.betterBilibili || {};
-    const purifyPage = currentConfig.enabled && better.purifyPage;
-    const tweakLayout = currentConfig.enabled && better.tweakLayout;
-    const showCommentIp = currentConfig.enabled && better.showCommentIp;
-    const showTopicTags = currentConfig.enabled && better.showTopicTags;
-    const removeEndingPanel = currentConfig.enabled && better.removeEndingPanel;
 
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
-      ${
-        purifyPage
-          ? [
-              ".ad-report",
-              ".video-card-ad-small",
-              ".slide-ad-exp",
-              ".activity-m-v1",
-              ".eva-banner",
-              ".pop-live-small-mode",
-              ".bili-header__banner",
-              ".right-entry__outside"
-            ].join(",") + "{display:none!important;}"
-          : ""
-      }
-      ${
-        removeEndingPanel
-          ? [
-              ".bpx-player-ending-panel",
-              ".bpx-player-ending-related",
-              ".bilibili-player-ending-panel"
-            ].join(",") + "{display:none!important;}"
-          : ""
-      }
-      ${
-        tweakLayout
-          ? [
-              ".bili-feed4-layout",
-              ".bili-grid"
-            ].join(",") + "{scroll-margin-top:96px!important;}"
-          : ""
-      }
-      ${showCommentIp ? "[class*='ip-location'],[class*='reply-ip'],.reply-ip{display:inline!important;visibility:visible!important;}" : ""}
-      ${showTopicTags ? selectors.topicTag.join(",") + "{display:flex!important;visibility:visible!important;}" : ""}
       .biliarm-preserved-feed-card{display:block!important;}
-      .biliarm-blacklist-button{
-        position:absolute!important;
-        top:8px!important;
-        right:8px!important;
-        z-index:20!important;
-        border:0!important;
-        border-radius:6px!important;
-        padding:4px 8px!important;
-        background:rgba(0,0,0,.72)!important;
-        color:#fff!important;
-        font-size:12px!important;
-        cursor:pointer!important;
-      }
     `;
   }
 
@@ -443,21 +298,6 @@
     style.id = PRELOAD_STYLE_ID;
     style.textContent = `${selectors.cleanupCarousel.join(",")}{display:none!important;}`;
     appendStyleElement(style);
-  }
-
-  // 隐藏置顶广告评论时只做关键词过滤，不改动普通评论排序。
-  function hideTopAdComments() {
-    if (!currentConfig.enabled || !currentConfig.betterBilibili.hideTopAdComments) {
-      return;
-    }
-
-    const adWords = ["广告", "推广", "抽奖", "活动", "福利", "中奖", "商务"];
-    queryAll(selectors.topComment).forEach((comment) => {
-      const text = comment.textContent || "";
-      if (adWords.some((word) => text.includes(word))) {
-        comment.hidden = true;
-      }
-    });
   }
 
   // 默认关闭弹幕通过 B 站自带开关完成，避免直接改播放器内部状态。
@@ -656,92 +496,6 @@
     );
   }
 
-  // 卡片悬停展示“本地拉黑”，用于复刻首页快速拉黑入口。
-  function showBlacklistButton(card) {
-    if (!card || card.querySelector(".biliarm-blacklist-button")) {
-      return;
-    }
-
-    const previousPosition = getComputedStyle(card).position;
-    if (previousPosition === "static") {
-      card.style.position = "relative";
-    }
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "biliarm-blacklist-button";
-    button.textContent = "本地拉黑";
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      addLocalBlacklistTerm(getCardText(card));
-    });
-    card.appendChild(button);
-  }
-
-  // 首页三击回顶部和推荐卡片四击拉黑都绑定在捕获阶段，先于页面跳转处理。
-  function bindCardActions() {
-    if (cardActionBound) {
-      return;
-    }
-
-    cardActionBound = true;
-
-    document.addEventListener(
-      "mouseover",
-      (event) => {
-        const better = currentConfig.betterBilibili;
-        if (!currentConfig.enabled || !better.homeHoverBlacklist || !isHomePage()) {
-          return;
-        }
-
-        const card = event.target.closest(selectors.homeFeedCard.join(","));
-        showBlacklistButton(card);
-      },
-      true
-    );
-
-    document.addEventListener(
-      "click",
-      (event) => {
-        const better = currentConfig.betterBilibili;
-
-        if (currentConfig.enabled && better.homeTripleClickTop && isHomePage()) {
-          const clickedCard = event.target.closest(selectors.homeFeedCard.join(","));
-          if (!clickedCard) {
-            const now = Date.now();
-            tripleClickState.count = now - tripleClickState.time < 700 ? tripleClickState.count + 1 : 1;
-            tripleClickState.time = now;
-            if (tripleClickState.count >= 3) {
-              tripleClickState.count = 0;
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          }
-        }
-
-        if (currentConfig.enabled && better.playerQuadClickBlacklist && !isHomePage()) {
-          const card = event.target.closest(selectors.recommendCard.join(","));
-          if (!card) {
-            return;
-          }
-
-          const now = Date.now();
-          quadClickState.count = quadClickState.card === card && now - quadClickState.time < 1200 ? quadClickState.count + 1 : 1;
-          quadClickState.card = card;
-          quadClickState.time = now;
-
-          if (quadClickState.count >= 4) {
-            quadClickState.count = 0;
-            event.preventDefault();
-            event.stopPropagation();
-            addLocalBlacklistTerm(getCardText(card));
-          }
-        }
-      },
-      true
-    );
-  }
-
   // 播放结束后退出浏览器全屏或 B 站网页全屏。
   function exitFullscreenIfNeeded() {
     if (document.fullscreenElement && document.exitFullscreen) {
@@ -863,8 +617,6 @@
       return;
     }
 
-    applyBetterBilibiliFeatures();
-
     waitForPlayer((video) => {
       bindEndedHandler(video);
 
@@ -893,12 +645,6 @@
     });
   }
 
-  // Better Bilibili 复刻功能集中在这里执行，便于和播放器功能分开排查。
-  function applyBetterBilibiliFeatures() {
-    filterCardsByBlacklist();
-    hideTopAdComments();
-  }
-
   // 防抖调度页面增强，避免 MutationObserver 触发过密。
   function scheduleApply(delay) {
     window.clearTimeout(applyTimer);
@@ -913,7 +659,6 @@
     bindDomObserver();
     bindScrollHandler();
     bindHomeFeedRefreshKeeper();
-    bindCardActions();
     scheduleApply(0);
 
     CONFIG.onConfigChanged((nextConfig) => {

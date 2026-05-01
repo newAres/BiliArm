@@ -13,8 +13,7 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
 }
 
-.settings-page {
-  /* 参考 set.png 的深色列表设置面板。 */
+.settings-page[data-theme="dark"] {
   color-scheme: dark;
   --bg: #1b1b1b;
   --panel: #242424;
@@ -23,6 +22,17 @@
   --line: rgba(255, 255, 255, 0.06);
   --primary: #76d900;
   --primary-strong: #8bea18;
+}
+
+.settings-page[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --text: #1f2328;
+  --muted: #667085;
+  --line: rgba(15, 23, 42, 0.08);
+  --primary: #00a1d6;
+  --primary-strong: #0088bd;
 }
 
 * {
@@ -62,12 +72,12 @@ textarea {
   top: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: 44px 1fr 54px;
+  grid-template-columns: 44px 1fr 44px 54px;
   align-items: center;
   height: 62px;
   margin: 0 -40px 8px;
   padding: 0 40px;
-  background: #1f1f1f;
+  background: color-mix(in srgb, var(--bg) 88%, var(--panel));
   border-bottom: 1px solid var(--line);
 }
 
@@ -90,14 +100,20 @@ textarea {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #e6e6e6;
+  color: var(--text);
   font-size: 34px;
   line-height: 30px;
   cursor: pointer;
 }
 
 .icon-button:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--panel) 80%, var(--text) 8%);
+}
+
+.theme-toggle {
+  justify-self: end;
+  font-size: 22px;
+  line-height: 1;
 }
 
 .setting-group {
@@ -106,7 +122,7 @@ textarea {
 
 .group-title {
   margin: 18px 12px 8px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 20px;
   font-weight: 800;
 }
@@ -119,23 +135,6 @@ textarea {
   border: 0;
   border-radius: 10px;
   background: var(--panel);
-}
-
-.setting-stack {
-  display: block;
-}
-
-.setting-textarea {
-  width: 100%;
-  min-height: 120px;
-  margin-top: 12px;
-  padding: 12px;
-  border: 0;
-  border-radius: 8px;
-  resize: vertical;
-  background: #303030;
-  color: var(--text);
-  line-height: 1.6;
 }
 
 .settings-page .setting-name {
@@ -152,13 +151,13 @@ textarea {
 .settings-page select {
   min-width: 84px;
   border: 0;
-  background: #303030;
+  background: color-mix(in srgb, var(--panel) 86%, var(--text) 8%);
   color: var(--text);
   font-weight: 600;
 }
 
 .settings-page .switch-track {
-  background: #4a4a4a;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
 .settings-page .switch input:checked + .switch-track {
@@ -171,8 +170,8 @@ textarea {
 
 .settings-page .button {
   border-color: rgba(255, 255, 255, 0.12);
-  background: #2b2b2b;
-  color: #f3f4f6;
+  background: var(--panel);
+  color: var(--text);
 }
 
 .popup-app {

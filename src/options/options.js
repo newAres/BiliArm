@@ -7,6 +7,7 @@
   const statusText = document.getElementById("statusText");
   const resetButton = document.getElementById("resetButton");
   const closeOptions = document.getElementById("closeOptions");
+  const themeToggle = document.getElementById("themeToggle");
   let config = CONFIG.normalizeConfig();
   let statusTimer = 0;
 
@@ -28,8 +29,21 @@
     }
   }
 
+  // 深浅色模式写在 body 属性上，CSS 变量会自动切换整页配色。
+  function applyTheme() {
+    const theme = config.appearance.theme;
+    document.body.dataset.theme = theme;
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "☀" : "☾";
+      themeToggle.title = theme === "dark" ? "切换为浅色模式" : "切换为深色模式";
+      themeToggle.setAttribute("aria-label", themeToggle.title);
+    }
+  }
+
   // 用配置刷新所有控件状态；总开关关闭时禁用其它配置但保留值。
   function render() {
+    applyTheme();
+
     controls.forEach((control) => {
       const path = control.dataset.config;
       const value = getByPath(config, path);
@@ -68,6 +82,15 @@
   if (closeOptions) {
     closeOptions.addEventListener("click", () => {
       window.close();
+    });
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", async () => {
+      const nextTheme = config.appearance.theme === "dark" ? "light" : "dark";
+      config = await CONFIG.setConfigValue("appearance.theme", nextTheme);
+      render();
+      showStatus("主题已切换");
     });
   }
 

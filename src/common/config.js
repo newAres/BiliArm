@@ -30,24 +30,8 @@
       removeLargeCarousel: false,
       keepHomeFeedOnRefresh: false
     },
-    betterBilibili: {
-      tweakLayout: true,
-      purifyPage: true,
-      showCommentIp: false,
-      hideTopAdComments: false,
-      showTopicTags: false,
-      removeEndingPanel: true,
-      preferPlaybackUrl: false,
-      blockTrackingWebSocket: false,
-      localBlacklistEnabled: true,
-      filterRecommendations: true,
-      homeHoverBlacklist: true,
-      accountBlacklistAssist: false,
-      playerQuadClickBlacklist: true,
-      homeTripleClickTop: true
-    },
-    blacklist: {
-      localText: ""
+    appearance: {
+      theme: "dark"
     }
   };
 
@@ -90,6 +74,10 @@
 
     if (!["normal", "wide", "webFullscreen"].includes(normalized.player.defaultViewMode)) {
       normalized.player.defaultViewMode = DEFAULT_CONFIG.player.defaultViewMode;
+    }
+
+    if (!["dark", "light"].includes(normalized.appearance.theme)) {
+      normalized.appearance.theme = DEFAULT_CONFIG.appearance.theme;
     }
 
     return normalized;
