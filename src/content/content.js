@@ -101,12 +101,30 @@
       ".bili-live-card",
       ".live-card",
       ".live-room-card",
+      ".floor-card",
       "[class*='live-card']",
       "[class*='LiveCard']",
       "[class*='live-room']",
+      ".floor-single-card:has(.bili-video-card__info--ad)",
+      ".floor-single-card:has(.bili-video-card__info--bangumi)",
+      ".floor-single-card:has(.bili-video-card__info--pgc)",
+      ".floor-single-card:has([class*='bangumi'])",
+      ".floor-single-card:has([class*='pgc'])",
+      ".bili-video-card:has([class*='bangumi'])",
+      ".bili-video-card:has([class*='pgc'])",
+      ".bili-video-card:has(.bili-video-card__info--ad)",
       ".floor-single-card:has(a[href*='live.bilibili.com'])",
+      ".floor-single-card:has(a[href*='/bangumi/'])",
+      ".floor-single-card:has(a[href*='/anime/'])",
+      ".floor-single-card:has(a[href*='/guochuang/'])",
       ".bili-video-card:has(a[href*='live.bilibili.com'])",
+      ".bili-video-card:has(a[href*='/bangumi/'])",
+      ".bili-video-card:has(a[href*='/anime/'])",
+      ".bili-video-card:has(a[href*='/guochuang/'])",
       ".feed-card:has(a[href*='live.bilibili.com'])",
+      ".feed-card:has(a[href*='/bangumi/'])",
+      ".feed-card:has(a[href*='/anime/'])",
+      ".feed-card:has(a[href*='/guochuang/'])",
       "a[href*='live.bilibili.com']"
     ],
     bottomDanmaku: [
@@ -324,16 +342,23 @@
     appendStyleElement(style);
   }
 
-  // 首页直播卡片有时只暴露 live 链接，CSS 不能总是隐藏到卡片容器，这里做一次 DOM 兜底。
+  // 首页直播/番剧/国创卡片有时只暴露内部链接，CSS 不能总是隐藏到卡片容器，这里做一次 DOM 兜底。
   function hideLiveModules() {
     if (!currentConfig.enabled || !currentConfig.pageCleanup.removeLiveSection) {
       return;
     }
 
-    Array.from(document.querySelectorAll("a[href*='live.bilibili.com']")).forEach((link) => {
+    Array.from(document.querySelectorAll("a[href*='live.bilibili.com'],a[href*='/bangumi/'],a[href*='/anime/'],a[href*='/guochuang/']")).forEach((link) => {
       const container = link.closest(".bili-video-card,.feed-card,.floor-single-card,.bili-live-card,.live-card,[class*='card'],[class*='Card']");
       if (container) {
         container.style.display = "none";
+      }
+    });
+
+    Array.from(document.querySelectorAll(".floor-single-card,.bili-video-card,.feed-card")).forEach((card) => {
+      const label = getLabel(card);
+      if (["番剧", "国创", "综艺", "动漫", "直播"].some((text) => label.includes(text))) {
+        card.style.display = "none";
       }
     });
   }
@@ -422,7 +447,7 @@
 
     window.setTimeout(() => {
       const rect = player.getBoundingClientRect();
-      const safeTop = 60;
+      const safeTop = 50;
       const centerTop = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
       const topAligned = window.scrollY + rect.top - safeTop;
       const targetTop = Math.min(centerTop, topAligned);
