@@ -1,0 +1,162 @@
+/*
+ * BiliArm content styles.
+ *
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 BiliArm contributors
+ *
+ * The visual behavior is inspired by the reviewed CRX extensions, but the CSS
+ * selectors and comments are rewritten for BiliArm.
+ */
+
+.biliarm-hidden {
+  display: none !important;
+}
+
+/*
+ * Better Bilibili hides the homepage carousel and non-video floor cards with
+ * CSS at document_start. BiliArm keeps the same early-hide behavior to avoid a
+ * visible flash before JavaScript scans the feed. If the user disables homepage
+ * cleaning, content.js adds .biliarm-home-clean-off to <html>, and these rules
+ * stop applying.
+ */
+:root:not(.biliarm-home-clean-off) .container > .recommended-swipe,
+:root:not(.biliarm-home-clean-off) .is-version8 > .recommended-swipe,
+:root:not(.biliarm-home-clean-off) .bili-feed4 > .header-channel,
+:root:not(.biliarm-home-clean-off) .palette-button-outer.palette-feed4,
+:root:not(.biliarm-home-clean-off) body > .desktop-download-tip,
+:root:not(.biliarm-home-clean-off) body > div.adcard,
+:root:not(.biliarm-home-clean-off) .is-version8 > .bili-live-card,
+:root:not(.biliarm-home-clean-off) .container > .bili-live-card,
+:root:not(.biliarm-home-clean-off) .is-version8 > .floor-single-card,
+:root:not(.biliarm-home-clean-off) .container > .floor-single-card {
+  display: none !important;
+}
+
+:root:not(.biliarm-home-clean-off) .is-version8,
+:root:not(.biliarm-home-clean-off) .container {
+  column-gap: 1.5rem !important;
+  row-gap: 1.3rem !important;
+}
+
+:root:not(.biliarm-home-clean-off) .is-version8 > *,
+:root:not(.biliarm-home-clean-off) .container > * {
+  margin: 0 !important;
+}
+
+:root:not(.biliarm-home-clean-off) .is-version8,
+:root:not(.biliarm-home-clean-off) .container {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (min-width: 1140px) and (max-width: 1400px) {
+  :root:not(.biliarm-home-clean-off) .is-version8,
+  :root:not(.biliarm-home-clean-off) .container {
+    column-gap: 1.4rem !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  :root:not(.biliarm-home-clean-off) .is-version8,
+  :root:not(.biliarm-home-clean-off) .container {
+    column-gap: 1.3rem !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+:root:not(.biliarm-home-clean-off) .bili-feed4 > main > div.feed2 > div > div.container.is-version8 > div[block-reason],
+:root:not(.biliarm-home-clean-off) .feed2 > div > .container > div[block-reason],
+:root:not(.biliarm-home-clean-off) .container > [data-biliarm-card-hidden="true"],
+:root:not(.biliarm-home-clean-off) .is-version8 > [data-biliarm-card-hidden="true"] {
+  display: none !important;
+  order: 1;
+}
+
+.biliarm-card-hidden {
+  display: none !important;
+}
+
+.biliarm-card-debug {
+  outline: 2px dashed #ec4899 !important;
+  position: relative !important;
+}
+
+.biliarm-card-debug::after {
+  background: #ec4899;
+  border-radius: 4px;
+  color: #fff;
+  content: attr(data-biliarm-reason);
+  font-size: 12px;
+  left: 4px;
+  line-height: 1.4;
+  max-width: 240px;
+  padding: 2px 6px;
+  position: absolute;
+  top: 4px;
+  z-index: 2147483647;
+}
+
+.biliarm-block-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.biliarm-mini-button {
+  background: #eef3f8;
+  border: 1px solid #cbd6e2;
+  border-radius: 4px;
+  color: #4b647a;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.biliarm-mini-button:hover {
+  background: #ec4899;
+  border-color: #ec4899;
+  color: #fff;
+}
+
+.biliarm-overlay {
+  background: rgba(9, 21, 33, 0.78);
+  border-radius: 4px;
+  color: #fff;
+  font: 16px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  left: 16px;
+  max-width: min(540px, calc(100vw - 32px));
+  padding: 8px 10px;
+  pointer-events: none;
+  position: fixed;
+  top: 16px;
+  z-index: 2147483647;
+}
+
+.biliarm-overlay.is-center {
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+}
+
+.biliarm-overlay.is-right {
+  left: auto;
+  right: 16px;
+}
+
+.biliarm-video-scale-50 {
+  transform: scale(0.5);
+  transform-origin: center center;
+}
+
+.biliarm-video-scale-75 {
+  transform: scale(0.75);
+  transform-origin: center center;
+}
+
+.biliarm-video-scale-100 {
+  transform: scale(1);
+  transform-origin: center center;
+}

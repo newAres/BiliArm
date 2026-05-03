@@ -1,147 +1,57 @@
 <!doctype html>
+<!--
+  BiliArm options page.
+
+  SPDX-License-Identifier: MIT
+  Copyright (c) 2026 BiliArm contributors
+-->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BiliArm 设置</title>
-    <link rel="stylesheet" href="../common/settings.css">
+    <link rel="stylesheet" href="options.css">
   </head>
-  <body class="settings-page">
-    <main class="app settings-app">
-      <header class="settings-header">
-        <button class="icon-button" id="closeOptions" type="button" aria-label="关闭设置">×</button>
-        <h1 class="settings-title">BiliArm 设置</h1>
-        <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色模式">☾</button>
-        <label class="switch" title="插件总开关">
-          <input type="checkbox" data-config="enabled">
-          <span class="switch-track"></span>
-        </label>
-      </header>
+  <body>
+    <main class="settings-shell">
+      <aside class="sidebar" aria-label="设置分类">
+        <div class="brand-row">
+          <div class="brand">BiliArm</div>
+          <button id="themeToggle" class="theme-icon-button" type="button" aria-label="切换深浅色主题" title="切换深浅色主题">☾</button>
+        </div>
+        <nav id="navList" class="nav-list"></nav>
+      </aside>
 
-      <p class="settings-summary">按自己的观看习惯开启功能，配置会自动保存。</p>
+      <section class="content">
+        <header class="content-header">
+          <div>
+            <h1 id="sectionTitle">基本设置</h1>
+            <p id="sectionDescription">所有功能都可以单独开启或关闭。</p>
+          </div>
+          <label class="switch global-switch" title="扩展总开关">
+            <input id="globalEnabled" type="checkbox" data-config="enabled">
+            <span></span>
+          </label>
+        </header>
 
-      <section class="setting-group">
-        <h2 class="group-title">播放</h2>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">自动播放</span>
-            <span class="setting-desc">进入播放页后尝试自动开始播放。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="player.autoPlay">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">默认显示模式</span>
-            <span class="setting-desc">进入播放页后自动切换到指定显示模式。</span>
-          </span>
-          <select data-config="player.defaultViewMode">
-            <option value="normal">正常</option>
-            <option value="wide">宽屏</option>
-            <option value="webFullscreen">网页全屏</option>
-          </select>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">播放结束退出全屏</span>
-            <span class="setting-desc">视频结束后退出全屏或网页全屏。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="player.exitFullscreenOnEnded">
-            <span class="switch-track"></span>
-          </label>
-        </div>
+        <div id="sectionBody" class="section-body"></div>
       </section>
-
-      <section class="setting-group">
-        <h2 class="group-title">弹幕</h2>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">默认关闭弹幕</span>
-            <span class="setting-desc">进入播放页后自动关闭弹幕。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="player.defaultDanmakuOff">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">屏蔽底部弹幕</span>
-            <span class="setting-desc">尽量隐藏底部弹幕，减少字幕遮挡。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="danmaku.hideBottomDanmaku">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-      </section>
-
-      <section class="setting-group">
-        <h2 class="group-title">灯光</h2>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">默认关灯</span>
-            <span class="setting-desc">进入播放页后自动开启 B 站关灯模式。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="light.defaultLightsOff">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">滚动自动开关灯</span>
-            <span class="setting-desc">滚动页面时自动调整 B 站关灯状态。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="light.autoToggleOnScroll">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-      </section>
-
-      <section class="setting-group">
-        <h2 class="group-title">页面清理</h2>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">去除大屏轮播图</span>
-            <span class="setting-desc">隐藏首页或大屏页面里的轮播内容。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="pageCleanup.removeLargeCarousel">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">换一换保留旧列表</span>
-            <span class="setting-desc">首页点击换一换后，新视频排在前面，原列表自动后移保留。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="pageCleanup.keepHomeFeedOnRefresh">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting setting-card">
-          <span class="setting-main">
-            <span class="setting-name">去除直播模块</span>
-            <span class="setting-desc">隐藏首页直播卡片和直播推荐模块。</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="pageCleanup.removeLiveSection">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-      </section>
-
-      <div class="actions settings-actions">
-        <button class="button" id="resetButton" type="button">恢复默认设置</button>
-        <span class="status" id="statusText"></span>
-      </div>
     </main>
+
+    <dialog id="shortcutDialog" class="shortcut-dialog">
+      <form method="dialog">
+        <h2>修改快捷键</h2>
+        <p id="shortcutDialogHelp">按下新的快捷键组合，或点击清空。</p>
+        <kbd id="shortcutPreview">等待输入</kbd>
+        <div class="dialog-actions">
+          <button id="clearShortcut" type="button">清空</button>
+          <button value="cancel">取消</button>
+          <button id="saveShortcut" value="default">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <input id="importFile" type="file" accept="application/json" hidden>
 
     <script src="../common/config.js"></script>
     <script src="options.js"></script>

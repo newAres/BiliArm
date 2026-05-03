@@ -1,76 +1,71 @@
 <!doctype html>
+<!--
+  BiliArm popup.
+
+  SPDX-License-Identifier: MIT
+  Copyright (c) 2026 BiliArm contributors
+-->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BiliArm</title>
-    <link rel="stylesheet" href="../common/settings.css">
+    <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <main class="popup-app">
-      <header class="header">
+    <main class="popup">
+      <header class="hero">
         <div>
-          <h1 class="title">BiliArm</h1>
-          <p class="subtitle">快速切换常用功能。</p>
+          <h1>BiliArm</h1>
+          <p>哔哩哔哩体验增强扩展</p>
         </div>
-        <label class="switch" title="插件总开关">
-          <input type="checkbox" data-config="enabled">
-          <span class="switch-track"></span>
-        </label>
+        <div class="hero-tools">
+          <button id="themeToggle" class="theme-button" type="button" aria-label="切换深浅色主题" title="切换深浅色主题">☾</button>
+          <img class="logo" src="../../assets/logo_example.png" alt="BiliArm logo">
+        </div>
       </header>
 
-      <section class="panel">
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">默认关闭弹幕</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="player.defaultDanmakuOff">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">自动播放</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="player.autoPlay">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">默认关灯</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="light.defaultLightsOff">
-            <span class="switch-track"></span>
-          </label>
-        </div>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">显示模式</span>
-          </span>
-          <select data-config="player.defaultViewMode">
-            <option value="normal">正常</option>
-            <option value="wide">宽屏</option>
-            <option value="webFullscreen">网页全屏</option>
-          </select>
-        </div>
-        <div class="setting">
-          <span class="setting-main">
-            <span class="setting-name">换一换保留旧列表</span>
-          </span>
-          <label class="switch">
-            <input type="checkbox" data-config="pageCleanup.keepHomeFeedOnRefresh">
-            <span class="switch-track"></span>
-          </label>
-        </div>
+      <section class="panel intro-panel">
+        <div>欢迎使用 BiliArm</div>
+        <div class="intro-muted">首页净化、黑名单、播放器快捷键和观看增强。</div>
       </section>
 
-      <div class="actions">
-        <button class="button button-primary" id="openOptions" type="button">完整设置</button>
-        <span class="status" id="statusText"></span>
-      </div>
+      <section class="popup-section">
+        <h2>快捷设置</h2>
+        <button id="toggleEnabled" class="quick-button" type="button">
+          <span>
+            <strong>扩展总开关</strong>
+            <small>开启或关闭所有增强功能。</small>
+          </span>
+          <span class="button-state"></span>
+        </button>
+        <button id="toggleClean" class="quick-button" type="button">
+          <span>
+            <strong>首页净化</strong>
+            <small>过滤首页广告、直播和推广卡片。</small>
+          </span>
+          <span class="button-state"></span>
+        </button>
+        <button id="toggleHotkeys" class="quick-button" type="button">
+          <span>
+            <strong>播放器快捷键</strong>
+            <small>控制扩展提供的快捷键功能。</small>
+          </span>
+          <span class="button-state"></span>
+        </button>
+        <button id="openOptions" class="quick-button" type="button">
+          <span>
+            <strong>更多设置</strong>
+            <small>打开完整设置页进行细项调整。</small>
+          </span>
+          <span class="arrow">→</span>
+        </button>
+      </section>
+
+      <footer class="footer">
+        <span id="versionText">版本 0.2.0</span>
+        <span>© 2026 Armoen软件</span>
+      </footer>
     </main>
 
     <script src="../common/config.js"></script>

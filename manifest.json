@@ -1,10 +1,16 @@
 {
   "manifest_version": 3,
   "name": "BiliArm",
-  "version": "0.1.0",
-  "description": "优化哔哩哔哩网页端观看体验，支持弹幕、关灯、显示模式和页面清理等增强能力。",
-  "permissions": ["storage"],
-  "host_permissions": ["https://www.bilibili.com/*"],
+  "version": "0.0.1",
+  "description": "整合 B 站推荐净化、黑名单、播放器快捷键、截图、反追踪和页面样式优化的浏览器扩展。",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.bilibili.com/*",
+    "https://search.bilibili.com/*",
+    "https://api.bilibili.com/*"
+  ],
   "background": {
     "service_worker": "src/background.js"
   },
@@ -12,29 +18,45 @@
     "default_title": "BiliArm",
     "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "16": "assets/icons/icon-16.png",
-      "32": "assets/icons/icon-32.png",
-      "48": "assets/icons/icon-48.png",
-      "128": "assets/icons/icon-128.png"
+      "16": "assets/logo_example.png",
+      "32": "assets/logo_example.png",
+      "48": "assets/logo_example.png",
+      "128": "assets/logo_example.png"
     }
   },
   "icons": {
-    "16": "assets/icons/icon-16.png",
-    "32": "assets/icons/icon-32.png",
-    "48": "assets/icons/icon-48.png",
-    "128": "assets/icons/icon-128.png"
+    "16": "assets/logo_example.png",
+    "32": "assets/logo_example.png",
+    "48": "assets/logo_example.png",
+    "128": "assets/logo_example.png"
   },
   "options_page": "src/options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/page/page-agent.js"
+      ],
+      "matches": [
+        "https://www.bilibili.com/*",
+        "https://search.bilibili.com/*"
+      ]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
-        "https://www.bilibili.com/*"
+        "https://www.bilibili.com/*",
+        "https://search.bilibili.com/*"
       ],
       "js": [
         "src/common/config.js",
         "src/content/content.js"
       ],
-      "run_at": "document_start"
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ]
 }

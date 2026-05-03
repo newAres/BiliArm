@@ -1,0 +1,342 @@
+/*
+ * BiliArm options page styles.
+ *
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 BiliArm contributors
+ *
+ * The settings layout follows the user-provided UI sample: a calm left
+ * navigation column, a right aligned control column, light-blue enabled switches and
+ * dense but readable setting rows.
+ */
+
+:root {
+  --bg: #ffffff;
+  --page: #f3f8fc;
+  --card: #ffffff;
+  --text: #30475b;
+  --muted: #8ca0b5;
+  --line: #edf2f7;
+  --field: #cbd6e2;
+  --soft: #f5f8fb;
+  --accent: #7ec8f2;
+  --accent-dark: #2d95c7;
+  --button: #4d9fcb;
+  --sidebar-width: 260px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #152231;
+  --page: #101a26;
+  --card: #182739;
+  --text: #e8f3fb;
+  --muted: #94abc0;
+  --line: #25384a;
+  --field: #3c5266;
+  --soft: #1d2d3e;
+  --accent: #7ec8f2;
+  --accent-dark: #a9ddf8;
+  --button: #65b7e5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--page);
+  color: var(--text);
+  font: 14px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+.settings-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(640px, 1fr);
+  margin: 0 auto;
+  max-width: 1380px;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  height: 100vh;
+  padding: 28px 0 28px 64px;
+  position: sticky;
+  top: 0;
+}
+
+.brand-row {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin: 0 32px 18px 0;
+}
+
+.brand {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.theme-icon-button {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 16px;
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  width: 32px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  padding-right: 22px;
+}
+
+.nav-button {
+  background: transparent;
+  border: 0;
+  color: #70889c;
+  cursor: pointer;
+  font: inherit;
+  padding: 7px 0;
+  text-align: left;
+}
+
+.nav-button.active {
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.content {
+  max-width: 1120px;
+  padding: 36px 72px 72px;
+  width: 100%;
+}
+
+.content-header {
+  align-items: center;
+  background: var(--card);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding: 18px 20px;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.content-header p {
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.setting-row {
+  align-items: center;
+  background: var(--card);
+  border-radius: 8px;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(320px, 1fr) 180px;
+  padding: 16px 18px;
+}
+
+.setting-title {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.setting-desc {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.switch {
+  display: inline-flex;
+  justify-self: end;
+}
+
+.switch input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.switch span {
+  background: #bfccd8;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-block;
+  height: 20px;
+  position: relative;
+  transition: background 0.2s;
+  width: 40px;
+}
+
+.switch span::after {
+  background: #fff;
+  border-radius: 50%;
+  content: "";
+  height: 16px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  transition: transform 0.2s;
+  width: 16px;
+}
+
+.switch input:checked + span {
+  background: var(--accent);
+}
+
+.switch input:checked + span::after {
+  transform: translateX(20px);
+}
+
+input[type="number"],
+select,
+.text-field {
+  background: var(--card);
+  border: 1px solid var(--field);
+  border-radius: 4px;
+  color: var(--text);
+  font: inherit;
+  min-height: 44px;
+  padding: 0 14px;
+  width: 180px;
+}
+
+.button-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+button.primary,
+button.secondary,
+button.linkish {
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+button.primary {
+  background: var(--button);
+  border: 1px solid var(--button);
+  color: #fff;
+}
+
+button.secondary {
+  background: var(--card);
+  border: 1px solid var(--field);
+  color: var(--text);
+}
+
+button.linkish {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  padding: 0 4px;
+}
+
+.table {
+  background: var(--card);
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+kbd {
+  background: var(--soft);
+  border: 1px solid var(--field);
+  border-radius: 4px;
+  color: var(--text);
+  display: inline-block;
+  min-width: 48px;
+  padding: 3px 8px;
+  text-align: center;
+}
+
+.danger {
+  color: var(--accent-dark);
+}
+
+.notice {
+  background: var(--soft);
+  border-radius: 4px;
+  color: var(--muted);
+  padding: 14px 16px;
+}
+
+.shortcut-dialog {
+  background: var(--card);
+  border: 1px solid var(--field);
+  border-radius: 8px;
+  color: var(--text);
+  min-width: 360px;
+  padding: 22px;
+}
+
+.shortcut-dialog::backdrop {
+  background: rgba(20, 34, 48, 0.28);
+}
+
+.shortcut-dialog h2 {
+  margin: 0 0 8px;
+}
+
+.shortcut-dialog p {
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.shortcut-dialog kbd {
+  font-size: 18px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
