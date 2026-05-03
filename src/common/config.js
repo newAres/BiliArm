@@ -28,7 +28,8 @@
     },
     pageCleanup: {
       removeLargeCarousel: false,
-      keepHomeFeedOnRefresh: false
+      keepHomeFeedOnRefresh: false,
+      removeLiveSection: false
     },
     appearance: {
       theme: "dark"

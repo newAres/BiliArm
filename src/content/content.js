@@ -88,6 +88,15 @@
       ".large-header-v1 .banner",
       ".bili-header .animated-banner"
     ],
+    liveSection: [
+      ".bili-live-card",
+      ".live-card",
+      ".live-room-card",
+      ".floor-single-card:has(a[href*='live.bilibili.com'])",
+      ".bili-video-card:has(a[href*='live.bilibili.com'])",
+      ".feed-card:has(a[href*='live.bilibili.com'])",
+      "a[href*='live.bilibili.com']"
+    ],
     bottomDanmaku: [
       ".bpx-player-row-dm-wrap",
       ".bilibili-player-video-danmaku .danmaku-item[data-mode='bottom']",
@@ -281,9 +290,11 @@
 
     const hideCarousel = currentConfig.enabled && currentConfig.pageCleanup.removeLargeCarousel;
     const hideBottomDanmaku = currentConfig.enabled && currentConfig.danmaku.hideBottomDanmaku;
+    const hideLiveSection = currentConfig.enabled && currentConfig.pageCleanup.removeLiveSection;
 
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
+      ${hideLiveSection ? selectors.liveSection.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
       .biliarm-preserved-feed-card{display:block!important;}
     `;
@@ -365,7 +376,7 @@
 
     window.setTimeout(() => {
       const rect = player.getBoundingClientRect();
-      const safeTop = 96;
+      const safeTop = 24;
       const centerTop = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
       const topAligned = window.scrollY + rect.top - safeTop;
       const targetTop = Math.min(centerTop, topAligned);
