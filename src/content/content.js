@@ -87,13 +87,6 @@
       ".player-mode-webfullscreen"
     ],
     cleanupCarousel: [
-      ".recommended-swipe",
-      ".bili-feed4-layout .recommended-swipe",
-      ".bili-feed4-layout .carousel-area",
-      ".bili-feed4-layout .banner-card",
-      ".bili-grid .recommended-swipe",
-      ".banner-card",
-      ".carousel-area",
       ".large-header-v1 .banner",
       ".bili-header .animated-banner"
     ],
@@ -101,22 +94,12 @@
       ".bili-live-card",
       ".live-card",
       ".live-room-card",
-      ".floor-card",
       "[class*='live-card']",
       "[class*='LiveCard']",
       "[class*='live-room']",
-      ".floor-single-card:has(.bili-video-card__info--ad)",
-      ".floor-single-card:has(.bili-video-card__info--bangumi)",
-      ".floor-single-card:has(.bili-video-card__info--pgc)",
-      ".floor-single-card:has([class*='bangumi'])",
-      ".floor-single-card:has([class*='pgc'])",
       ".bili-video-card:has([class*='bangumi'])",
       ".bili-video-card:has([class*='pgc'])",
       ".bili-video-card:has(.bili-video-card__info--ad)",
-      ".floor-single-card:has(a[href*='live.bilibili.com'])",
-      ".floor-single-card:has(a[href*='/bangumi/'])",
-      ".floor-single-card:has(a[href*='/anime/'])",
-      ".floor-single-card:has(a[href*='/guochuang/'])",
       ".bili-video-card:has(a[href*='live.bilibili.com'])",
       ".bili-video-card:has(a[href*='/bangumi/'])",
       ".bili-video-card:has(a[href*='/anime/'])",
@@ -124,19 +107,7 @@
       ".feed-card:has(a[href*='live.bilibili.com'])",
       ".feed-card:has(a[href*='/bangumi/'])",
       ".feed-card:has(a[href*='/anime/'])",
-      ".feed-card:has(a[href*='/guochuang/'])",
-      ".bili-feed4-layout > :has(a[href*='live.bilibili.com'])",
-      ".bili-feed4-layout > :has(a[href*='/bangumi/'])",
-      ".bili-feed4-layout > :has(a[href*='/anime/'])",
-      ".bili-feed4-layout > :has(a[href*='/guochuang/'])",
-      ".bili-grid > :has(a[href*='live.bilibili.com'])",
-      ".bili-grid > :has(a[href*='/bangumi/'])",
-      ".bili-grid > :has(a[href*='/anime/'])",
-      ".bili-grid > :has(a[href*='/guochuang/'])",
-      ".recommended-container_floor-aside > :has(a[href*='live.bilibili.com'])",
-      ".recommended-container_floor-aside > :has(a[href*='/bangumi/'])",
-      ".recommended-container_floor-aside > :has(a[href*='/anime/'])",
-      ".recommended-container_floor-aside > :has(a[href*='/guochuang/'])"
+      ".feed-card:has(a[href*='/guochuang/'])"
     ],
     bottomDanmaku: [
       ".bpx-player-row-dm-wrap",
@@ -335,7 +306,6 @@
 
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
-      ${hideLiveSection ? selectors.liveSection.join(",") + "{display:none!important;}" : ""}
       ${hideLiveSection ? ".biliarm-hidden-feed-card{display:none!important;}" : ""}
       ${hideLiveSection ? ".bili-feed4-layout,.bili-grid{grid-auto-flow:dense!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
@@ -361,18 +331,16 @@
       return null;
     }
 
-    const grid = node.closest(".bili-feed4-layout,.bili-grid,.recommended-container_floor-aside");
-    if (grid) {
-      let item = node;
-      while (item && item.parentElement !== grid) {
-        item = item.parentElement;
-      }
-      if (item && item !== grid) {
-        return item;
-      }
+    const card = node.closest(".bili-video-card,.feed-card,.floor-card,.bili-live-card,.live-card,.floor-single-card");
+    if (!card || card.closest(".bili-header,.left-entry,.right-entry,.bili-channel,.channel-icons,.palette-button-wrap")) {
+      return null;
     }
 
-    return node.closest(".floor-single-card,.bili-video-card,.feed-card,.bili-live-card,.live-card");
+    if (card.matches(".floor-single-card") && card.querySelectorAll(".bili-video-card,.feed-card,.floor-card").length > 1) {
+      return null;
+    }
+
+    return card;
   }
 
   // 统一隐藏整张首页卡片，避免只隐藏图片或链接后留下栅格空洞。
@@ -397,7 +365,7 @@
       hideHomeFeedCard(link);
     });
 
-    Array.from(document.querySelectorAll(".floor-single-card,.bili-video-card,.feed-card")).forEach((card) => {
+    Array.from(document.querySelectorAll(".bili-video-card,.feed-card,.bili-live-card,.live-card")).forEach((card) => {
       const label = getLabel(card);
       if (["番剧", "国创", "综艺", "动漫", "直播"].some((text) => label.includes(text))) {
         hideHomeFeedCard(card);
