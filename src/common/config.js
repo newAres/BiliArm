@@ -1,31 +1,30 @@
 /*
- * BiliArm shared configuration helpers.
+ * BiliArm 共享配置辅助模块。
  *
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 BiliArm contributors
+ * 版权所有 (c) 2026 BiliArm 贡献者
  *
- * Portions of the defaults mirror behavior observed in:
+ * 部分默认值参考了以下扩展的行为：
  * - Better Bilibili 2026.02.13
- * - Bilibili Player Extension 3.0.2 by Guokai Han
+ * - Bilibili Player Extension 3.0.2，作者 Guokai Han
  *
- * The original CRX scripts were minified. This file rewrites the configuration
- * layer as documented, commented, maintainable MIT-licensed BiliArm code.
+ * 原 CRX 脚本经过压缩。本文件将配置层重写为带文档、带注释、
+ * 可维护并遵循 MIT 许可证的 BiliArm 代码。
  */
 
 (function (global) {
   "use strict";
 
   /*
-   * All extension surfaces read and write the same storage key. Using one
-   * object makes import/export simple and allows old configs to be migrated by
-   * merging them with DEFAULT_CONFIG.
+   * 所有扩展界面读写同一个 storage key。使用单个配置对象能简化导入导出，
+   * 也能通过和 DEFAULT_CONFIG 合并来迁移旧配置。
    */
   const STORAGE_KEY = "biliArmConfig";
   const CONFIG_VERSION = 2;
 
   /*
-   * The shortcuts are separated into groups so the options page can render a
-   * clear "B site defaults" table and a separate editable extension table.
+   * 快捷键按分组保存，设置页可分别渲染“B 站默认快捷键”表格
+   * 和可编辑的扩展快捷键表格。
    */
   const DEFAULT_SHORTCUTS = {
     danmakuToggle: { group: "弹幕 / 字幕", label: "切换弹幕", code: "KeyD", ctrl: false, alt: false, shift: false, enabled: true },
@@ -60,9 +59,8 @@
   };
 
   /*
-   * B site default shortcuts are intentionally read-only. They are displayed in
-   * the settings UI so users understand collisions before changing extension
-   * shortcuts.
+   * B 站默认快捷键刻意设为只读。设置页展示它们，
+   * 方便用户修改扩展快捷键前了解可能的冲突。
    */
   const BILIBILI_DEFAULT_SHORTCUTS = [
     { label: "播放 / 暂停", shortcut: "Space", note: "B 站播放器默认快捷键" },
@@ -77,8 +75,8 @@
   ];
 
   /*
-   * Every feature has a switch. Module switches are under "modules"; detailed
-   * feature switches live in their own module objects.
+   * 每个功能都有开关。模块总开关位于 modules 下，
+   * 具体功能开关保存在各自模块对象中。
    */
   const DEFAULT_CONFIG = {
     version: CONFIG_VERSION,
@@ -121,7 +119,8 @@
     playRecommend: {
       hideBlockedUsers: true,
       dynamicScan: true,
-      markCurrentUp: true,
+      /* 原扩展未找到“标记当前 UP 主推荐”的对应实现，默认禁用这个未暴露配置项。 */
+      markCurrentUp: false,
       showReasons: false
     },
     hotkeys: {
@@ -210,10 +209,18 @@
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
 
+  /*
+   * 配置对象只包含 JSON 兼容值，因此 JSON 克隆已经足够，
+   * 也能保持设置页、内容脚本和弹窗中的行为一致。
+   */
   function deepClone(value) {
     return JSON.parse(JSON.stringify(value));
   }
 
+  /*
+   * 将用户已保存设置合并到新的默认值上。这样新版本可以添加开关，
+   * 同时保留用户已有选择，不会破坏旧配置。
+   */
   function deepMerge(base, extra) {
     const output = deepClone(base);
 
@@ -235,6 +242,10 @@
     return output;
   }
 
+  /*
+   * 快捷键记录逐条规范化，因为导入数据可能缺少修饰键字段，
+   * 或用字符串 "null" 表示已清空的按键。
+   */
   function normalizeShortcut(shortcut, fallback) {
     const merged = deepMerge(fallback, shortcut || {});
     merged.enabled = Boolean(merged.enabled);
@@ -245,6 +256,10 @@
     return merged;
   }
 
+  /*
+   * normalizeConfig 是集中迁移入口。所有读取、写入和导入都会经过这里，
+   * 确保 UI 与内容脚本拿到完整配置，并且枚举值都在支持范围内。
+   */
   function normalizeConfig(config) {
     const normalized = deepMerge(DEFAULT_CONFIG, config || {});
     normalized.version = CONFIG_VERSION;
@@ -264,6 +279,10 @@
     return normalized;
   }
 
+  /*
+   * 从 sync storage 读取配置。静态检查时如果脚本不在扩展环境中运行，
+   * 则回退到默认值而不是抛错。
+   */
   function readStorage() {
     return new Promise((resolve) => {
       if (!global.chrome || !chrome.storage || !chrome.storage.sync) {
@@ -277,6 +296,10 @@
     });
   }
 
+  /*
+   * 配置规范化后写入 sync storage。返回规范化后的对象，
+   * 让调用方无需再次读取即可立刻重渲染。
+   */
   function writeStorage(config) {
     const normalized = normalizeConfig(config);
 
@@ -292,6 +315,10 @@
     });
   }
 
+  /*
+   * 解析 "modules.homeClean" 这类点分路径。设置页使用这些路径，
+   * 因此新增开关只需要声明数据，不必写专门的渲染代码。
+   */
   function getByPath(config, path) {
     return path.split(".").reduce((cursor, part) => {
       if (!cursor || typeof cursor !== "object") {
@@ -301,6 +328,10 @@
     }, config);
   }
 
+  /*
+   * 创建一个修改了指定点分路径的配置副本。原对象不被直接修改，
+   * 便于理解渲染函数和导入流程。
+   */
   function setByPath(config, path, value) {
     const output = deepClone(config);
     const parts = path.split(".");
@@ -317,15 +348,26 @@
     return normalizeConfig(output);
   }
 
+  /*
+   * 给只需要更新单个设置项的简单 UI 控件使用的便捷函数。
+   */
   async function setConfigValue(path, value) {
     const config = await readStorage();
     return writeStorage(setByPath(config, path, value));
   }
 
+  /*
+   * 恢复默认设置时不触碰 IndexedDB 黑名单记录，
+   * 因为黑名单属于用户内容，不是普通偏好设置。
+   */
   async function resetConfig() {
     return writeStorage(DEFAULT_CONFIG);
   }
 
+  /*
+   * 订阅扩展不同界面之间的配置变化。用户在弹窗或设置页切换开关时，
+   * 内容脚本可通过它立刻响应。
+   */
   function onConfigChanged(callback) {
     if (!global.chrome || !chrome.storage || !chrome.storage.onChanged) {
       return function noop() {};
@@ -343,6 +385,10 @@
     return () => chrome.storage.onChanged.removeListener(listener);
   }
 
+  /*
+   * 暴露一个共享命名空间。所有 BiliArm 页面都会先加载本文件，
+   * 显式列出公共 API 可避免意外产生全局变量。
+   */
   global.BiliArmConfig = {
     STORAGE_KEY,
     CONFIG_VERSION,

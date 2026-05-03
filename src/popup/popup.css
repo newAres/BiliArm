@@ -1,14 +1,18 @@
 /*
- * BiliArm popup styles.
+ * BiliArm 弹窗样式。
  *
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 BiliArm contributors
+ * 版权所有 (c) 2026 BiliArm 贡献者
  *
- * The popup follows the user's set.png reference: top title + logo, card-like
- * setting rows, and version/copyright information at the bottom.
+ * 弹窗遵循用户提供的 set.png 参考：
+ * 顶部标题和 logo、卡片式设置行，以及底部版本 / 版权信息。
  */
 
 :root {
+  /*
+   * 弹窗浅色主题变量。调色板与完整设置页保持一致，
+   * 让快捷弹窗看起来属于同一个产品界面。
+   */
   --page: #f0f7fc;
   --card: #ffffff;
   --text: #20384d;
@@ -19,6 +23,9 @@
 }
 
 :root[data-theme="dark"] {
+  /*
+   * 弹窗深色主题变量，由 popup.js 通过 dataset.theme 切换。
+   */
   --page: #101a26;
   --card: #182739;
   --text: #e8f3fb;
@@ -41,10 +48,16 @@ body {
 }
 
 .popup {
+  /*
+   * 适合浏览器工具栏弹窗的紧凑固定宽度布局。
+   */
   padding: 18px 14px 14px;
 }
 
 .hero {
+  /*
+   * 用户要求的顶部区域：产品名、logo 和主题图标。
+   */
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -76,6 +89,9 @@ h1 {
 }
 
 .theme-button {
+  /*
+   * 纯图标深浅色切换按钮，与完整设置页行为一致。
+   */
   align-items: center;
   background: var(--card);
   border: 1px solid var(--line);
@@ -94,6 +110,9 @@ h1 {
 
 .panel,
 .quick-button {
+  /*
+   * 简介面板和设置行共用的浅色 / 深色表面样式。
+   */
   background: var(--card);
   border: 1px solid transparent;
   border-radius: 12px;
@@ -118,6 +137,9 @@ h1 {
 }
 
 .quick-button {
+  /*
+   * 每个快捷设置都是整行宽度按钮，因此整行都可点击。
+   */
   align-items: center;
   color: var(--text);
   cursor: pointer;
@@ -149,6 +171,10 @@ h1 {
 }
 
 .button-state {
+  /*
+   * 快捷开关使用的胶囊状态指示器。
+   * 点击处理属于按钮本身；这个 span 只负责视觉表现。
+   */
   background: #bacbd9;
   border-radius: 999px;
   height: 22px;
@@ -182,6 +208,9 @@ h1 {
 }
 
 .footer {
+  /*
+   * 用户要求的底部区域：版本号和 Armoen 软件版权信息。
+   */
   color: var(--muted);
   display: flex;
   justify-content: space-between;

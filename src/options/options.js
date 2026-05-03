@@ -1,12 +1,12 @@
 /*
- * BiliArm options page.
+ * BiliArm 完整设置页。
  *
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 BiliArm contributors
+ * 版权所有 (c) 2026 BiliArm 贡献者
  *
- * This file renders all settings from declarative metadata so every feature has
- * a visible switch. The shortcut editor is a maintainable rewrite inspired by
- * the original Bilibili Player Extension shortcut page.
+ * 本文件根据声明式元数据渲染全部设置，确保每个功能都有可见开关。
+ * 快捷键编辑器参考原 Bilibili Player Extension 快捷键页重写，
+ * 便于维护。
  */
 
 (function () {
@@ -20,6 +20,10 @@
   let pendingShortcut = null;
   let theme = localStorage.getItem("biliarm-theme") || "light";
 
+  /*
+   * 左侧导航元数据。渲染器同时用它生成导航按钮和章节标题，
+   * 让标签与说明集中维护。
+   */
   const sections = [
     { id: "basic", label: "基本设置", description: "控制扩展总开关和主要模块开关。" },
     { id: "home", label: "首页净化", description: "过滤首页推荐流中的广告、直播、推广和疑似低质量内容。" },
@@ -36,6 +40,10 @@
     { id: "advanced", label: "高级设置", description: "重置配置和查看许可证说明。" }
   ];
 
+  /*
+   * 声明式设置结构。每个条目都会渲染成一行 UI，
+   * 新增开关时不需要再写专门的渲染函数。
+   */
   const settingGroups = {
     basic: [
       switchSetting("enabled", "启用 BiliArm", "关闭后所有模块都停止执行。"),
@@ -77,7 +85,7 @@
       switchSetting("player.autoPlay", "自动播放", "进入播放页后尝试自动播放。"),
       switchSetting("player.exitFullscreenOnEnded", "播放结束自动退出全屏", "视频结束时退出全屏或网页全屏。"),
       switchSetting("player.defaultLightsOff", "默认关灯", "进入播放页后自动开启关灯。"),
-      switchSetting("player.smartLights", "智能关灯", "预留开关，后续可按滚动状态自动开关灯。")
+      switchSetting("player.smartLights", "智能关灯", "根据播放器可见状态自动开关关灯效果。开启后会自动启用默认关灯。")
     ],
     danmaku: [
       switchSetting("danmaku.preventBottomDanmaku", "防底部弹幕挡字幕", "尽量隐藏底部弹幕区域。"),
@@ -106,8 +114,8 @@
       notice("反追踪会改写页面网络 API，遇到播放、评论、推荐异常时请先关闭本模块。"),
       switchSetting("tracking.blockWebSocket", "阻止播放追踪 WebSocket", "阻止 web-player-tracker.biliapi.net。", true),
       switchSetting("tracking.blockSendBeacon", "阻止日志上报 sendBeacon", "拦截部分 data.bilibili.com 日志。", true),
-      switchSetting("tracking.blockHomeLogs", "阻止首页日志请求", "预留开关，用于首页日志控制。", true),
-      switchSetting("tracking.blockPlayerLogs", "阻止播放器日志请求", "预留开关，用于播放器日志控制。", true),
+      switchSetting("tracking.blockHomeLogs", "阻止首页日志请求", "仅在首页拦截已知 B 站日志请求。", true),
+      switchSetting("tracking.blockPlayerLogs", "阻止播放器日志请求", "仅在播放页拦截已知 B 站日志和播放器追踪请求。", true),
       switchSetting("tracking.blockXhrLogs", "阻止部分 XHR 日志请求", "拦截 XMLHttpRequest 日志请求。", true),
       switchSetting("tracking.blockFetchLogs", "拦截部分 fetch 日志请求", "返回空 JSON 响应。", true),
       switchSetting("tracking.keepFeedback", "保留必要反馈行为", "保留 dislike / feedback 类行为。")
@@ -131,28 +139,46 @@
       switchSetting("styles.home", "启用首页样式优化", "隐藏首页轮播等干扰区域。"),
       switchSetting("styles.play", "启用播放页样式优化", "优化播放页部分视觉细节。"),
       switchSetting("styles.search", "启用搜索页样式优化", "隐藏搜索页广告区域。"),
-      switchSetting("styles.bangumi", "启用番剧页样式优化", "预留番剧页样式开关。"),
-      switchSetting("styles.list", "启用播放列表页样式优化", "预留列表页样式开关。")
+      switchSetting("styles.bangumi", "启用番剧页样式优化", "隐藏番剧页固定回复框和反馈入口。"),
+      switchSetting("styles.list", "启用播放列表页样式优化", "优化播放列表右侧推荐卡片样式。")
     ]
   };
 
   function switchSetting(path, title, desc, danger) {
+    /*
+     * switch 设置直接映射到布尔配置路径，
+     * 并渲染为参考 UI 样例中的右对齐开关样式。
+     */
     return { type: "switch", path, title, desc, danger: Boolean(danger) };
   }
 
   function selectSetting(path, title, desc, options) {
+    /*
+     * select 设置用于播放器显示模式、截图格式等枚举值。
+     */
     return { type: "select", path, title, desc, options };
   }
 
   function numberSetting(path, title, desc, min, max, step) {
+    /*
+     * number 设置把 min / max 元数据和标签放在一起，
+     * 便于同时生成校验规则和输入框属性。
+     */
     return { type: "number", path, title, desc, min, max, step: step || 1 };
   }
 
   function notice(text) {
+    /*
+     * notice 行用于说明风险功能，不绑定具体配置路径。
+     */
     return { type: "notice", text };
   }
 
   function shortcutText(shortcut) {
+    /*
+     * 设置表中快捷键以 KeyboardEvent.code 保存，
+     * 本格式化函数将它们转成面向用户的标签。
+     */
     if (!shortcut || !shortcut.code) {
       return "未设置";
     }
@@ -166,10 +192,18 @@
   }
 
   function isSameShortcut(a, b) {
+    /*
+     * 比较物理按键和完整修饰键集合；
+     * 只有组合的每一部分都相同才算冲突。
+     */
     return Boolean(a && b && a.code && b.code && a.code === b.code && a.ctrl === b.ctrl && a.alt === b.alt && a.shift === b.shift);
   }
 
   function findShortcutConflict(id, shortcut) {
+    /*
+     * 冲突检测会忽略当前正在编辑的快捷键，
+     * 并且只考虑已启用的快捷键。
+     */
     const shortcuts = config.hotkeys.shortcuts;
 
     return Object.keys(shortcuts).find((otherId) => {
@@ -178,6 +212,10 @@
   }
 
   function create(tag, className, text) {
+    /*
+     * 渲染器使用的小型 DOM 工厂。它能保持生成节点一致，
+     * 同时不引入框架依赖。
+     */
     const node = document.createElement(tag);
 
     if (className) {
@@ -192,11 +230,17 @@
   }
 
   async function saveConfig(nextConfig) {
+    /*
+     * 先持久化，再用共享配置模块返回的规范化配置重新渲染。
+     */
     config = await CONFIG.writeStorage(nextConfig);
     render();
   }
 
   async function setValue(path, value) {
+    /*
+     * 设置变化的集中处理器。网络 / 账号类风险功能在保存新值前会显式确认。
+     */
     const next = CONFIG.setByPath(config, path, value);
 
     if (path === "blacklist.accountBlockEnabled" && value && !confirm("账号拉黑会调用 B 站接口并修改你的账号关系，确认开启？")) {
@@ -207,10 +251,17 @@
       return;
     }
 
+    if (path === "player.smartLights" && value) {
+      next.player.defaultLightsOff = true;
+    }
+
     await saveConfig(next);
   }
 
   function renderNav() {
+    /*
+     * 每次渲染都重建导航，确保激活状态始终反映 activeSection。
+     */
     const nav = document.getElementById("navList");
     nav.textContent = "";
 
@@ -226,13 +277,17 @@
   }
 
   function renderSetting(item) {
+    /*
+     * 渲染一行声明式设置。第一列为文字，第二列为控件，
+     * 与用户提供的设置页样例一致。
+     */
     if (item.type === "notice") {
       return create("div", "notice", item.text);
     }
 
     const row = create("div", "setting-row");
     const text = create("div");
-    const title = create("div", `setting-title ${item.danger ? "danger" : ""}`, item.title);
+    const title = create("div", `setting-title ${item.danger ? "danger" : ""}`, item.danger ? `⚠️ ${item.title}` : item.title);
     const desc = create("div", "setting-desc", item.desc);
 
     text.append(title, desc);
@@ -281,6 +336,9 @@
   }
 
   function renderSettingsSection(sectionId) {
+    /*
+     * 用于普通 switch / select / number 章节的通用渲染器。
+     */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
@@ -290,6 +348,10 @@
   }
 
   function renderShortcutsSection() {
+    /*
+     * 快捷键章节需要自定义渲染，因为它包含两张表：
+     * 只读的 B 站默认快捷键，以及可编辑的 BiliArm 功能快捷键。
+     */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
@@ -357,6 +419,10 @@
   }
 
   function tableCell(text, asKbd, className) {
+    /*
+     * 构建表格单元格；快捷键文本可选用 <kbd> 包裹，
+     * 呈现为键盘按键样式。
+     */
     const td = create("td", className || "");
 
     if (asKbd) {
@@ -369,17 +435,27 @@
   }
 
   function tableNodeCell() {
+    /*
+     * 表格辅助函数，用于包含复选框、编辑按钮等控件的单元格。
+     */
     const td = create("td");
     td.append(...Array.from(arguments));
     return td;
   }
 
   async function exportBlacklist() {
+    /*
+     * 黑名单数据存放在后台 IndexedDB 中，因此导出时通过后台消息 API 获取。
+     */
     const response = await sendMessage({ type: "blacklist:list" });
     downloadJson(response, `biliarm-blacklist-${dateStamp()}.json`);
   }
 
   async function importBlacklist(file) {
+    /*
+     * 同时接受原始数组或包含 blockedUsers 的对象，
+     * 让导出数据结构后续演进时也不破坏简单导入文件。
+     */
     const text = await file.text();
     const data = JSON.parse(text);
     const imported = await sendMessage({ type: "blacklist:import", users: Array.isArray(data) ? data : data.blockedUsers });
@@ -387,6 +463,9 @@
   }
 
   async function importSettings(file) {
+    /*
+     * 设置导入会覆盖开关和快捷键。共享配置模块会在 writeStorage 后补齐缺失字段。
+     */
     const text = await file.text();
     const data = JSON.parse(text);
 
@@ -403,6 +482,9 @@
   }
 
   function sendMessage(message) {
+    /*
+     * 给数据导入 / 导出控件使用的 chrome.runtime.sendMessage Promise 包装。
+     */
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(message, (response) => {
         if (chrome.runtime.lastError) {
@@ -421,6 +503,10 @@
   }
 
   function downloadJson(data, name) {
+    /*
+     * 创建临时 object URL，点击模拟链接后撤销 URL，
+     * 避免重复导出时泄漏 blob。
+     */
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -432,10 +518,16 @@
   }
 
   function dateStamp() {
+    /*
+     * 导出文件名使用的紧凑时间戳：yyyyMMddHHmmss。
+     */
     return new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
   }
 
   function renderDataSection() {
+    /*
+     * 数据章节手动渲染，因为它需要组合可见按钮和用于 JSON 导入的隐藏文件输入框。
+     */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
@@ -489,6 +581,9 @@
   }
 
   function renderAdvancedSection() {
+    /*
+     * 高级章节用于放置许可证说明和恢复默认等不属于普通功能模块的操作。
+     */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
@@ -517,6 +612,9 @@
   }
 
   function openShortcutDialog(id) {
+    /*
+     * 将快捷键克隆到 pendingShortcut，用户取消弹窗时不会修改当前配置。
+     */
     editingShortcutId = id;
     pendingShortcut = CONFIG.deepClone(config.hotkeys.shortcuts[id]);
 
@@ -526,6 +624,10 @@
   }
 
   function bindShortcutDialog() {
+    /*
+     * 弹窗直接捕获 keydown。preventDefault 可避免用户录入 BiliArm 快捷键时
+     * 触发浏览器自身快捷键。
+     */
     const dialog = document.getElementById("shortcutDialog");
     const preview = document.getElementById("shortcutPreview");
 
@@ -565,6 +667,10 @@
   }
 
   function render() {
+    /*
+     * 顶层渲染会选择当前章节并委托给对应章节渲染器，
+     * 同时应用主题和全局开关状态。
+     */
     const section = sections.find((item) => item.id === activeSection) || sections[0];
 
     document.getElementById("sectionTitle").textContent = section.label;
@@ -587,6 +693,10 @@
   }
 
   async function start() {
+    /*
+     * 存储配置加载完成后启动设置页，
+     * 再绑定静态 HTML 中长期存在的控件。
+     */
     config = await CONFIG.readStorage();
     document.getElementById("globalEnabled").addEventListener("change", (event) => setValue("enabled", event.target.checked));
     document.getElementById("themeToggle").addEventListener("click", () => {

@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
-  BiliArm options page.
+  BiliArm 完整设置页。
 
   SPDX-License-Identifier: MIT
-  Copyright (c) 2026 BiliArm contributors
+  版权所有 (c) 2026 BiliArm 贡献者
 -->
 <html lang="zh-CN">
   <head>
@@ -13,7 +13,9 @@
     <link rel="stylesheet" href="options.css">
   </head>
   <body>
+    <!-- 完整设置页外壳：左侧导航保持可见，右侧内容随分类切换。 -->
     <main class="settings-shell">
+      <!-- 分类导航和主题切换。导航按钮由 options.js 渲染。 -->
       <aside class="sidebar" aria-label="设置分类">
         <div class="brand-row">
           <div class="brand">BiliArm</div>
@@ -22,6 +24,7 @@
         <nav id="navList" class="nav-list"></nav>
       </aside>
 
+      <!-- 当前章节内容。options.js 根据声明式设置元数据填充 sectionBody。 -->
       <section class="content">
         <header class="content-header">
           <div>
@@ -38,6 +41,7 @@
       </section>
     </main>
 
+    <!-- 快捷键编辑器。弹窗打开时由 options.js 捕获 keydown。 -->
     <dialog id="shortcutDialog" class="shortcut-dialog">
       <form method="dialog">
         <h2>修改快捷键</h2>
@@ -51,8 +55,10 @@
       </form>
     </dialog>
 
+    <!-- 黑名单导入按钮使用的隐藏文件输入框。 -->
     <input id="importFile" type="file" accept="application/json" hidden>
 
+    <!-- 共享配置必须在设置页渲染器之前加载。 -->
     <script src="../common/config.js"></script>
     <script src="options.js"></script>
   </body>

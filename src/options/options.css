@@ -1,15 +1,19 @@
 /*
- * BiliArm options page styles.
+ * BiliArm 完整设置页样式。
  *
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 BiliArm contributors
+ * 版权所有 (c) 2026 BiliArm 贡献者
  *
- * The settings layout follows the user-provided UI sample: a calm left
- * navigation column, a right aligned control column, light-blue enabled switches and
- * dense but readable setting rows.
+ * 设置页布局遵循用户提供的 UI 样例：
+ * 安静的左侧导航、右对齐控制列、浅蓝色启用开关，
+ * 以及紧凑但可读的设置行。
  */
 
 :root {
+  /*
+   * 浅色主题变量。颜色集中在变量中，
+   * 可让同一套组件规则支持深色模式，而不必复制选择器。
+   */
   --bg: #ffffff;
   --page: #f3f8fc;
   --card: #ffffff;
@@ -21,10 +25,16 @@
   --accent: #7ec8f2;
   --accent-dark: #2d95c7;
   --button: #4d9fcb;
+  --danger: #dc2626;
   --sidebar-width: 260px;
+  --content-width: 1040px;
+  scrollbar-gutter: stable;
 }
 
 :root[data-theme="dark"] {
+  /*
+   * 深色主题变量，由 options.js 通过 documentElement.dataset 切换。
+   */
   --bg: #152231;
   --page: #101a26;
   --card: #182739;
@@ -36,6 +46,12 @@
   --accent: #7ec8f2;
   --accent-dark: #a9ddf8;
   --button: #65b7e5;
+  --danger: #ff6b6b;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 * {
@@ -50,14 +66,23 @@ body {
 }
 
 .settings-shell {
+  /*
+   * 双列设置页布局：固定宽度导航和居中的内容区，
+   * 与提供的参考图一致。
+   */
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(640px, 1fr);
+  grid-template-columns: var(--sidebar-width) var(--content-width);
   margin: 0 auto;
-  max-width: 1380px;
+  max-width: calc(var(--sidebar-width) + var(--content-width));
   min-height: 100vh;
+  width: calc(var(--sidebar-width) + var(--content-width));
 }
 
 .sidebar {
+  /*
+   * 粘性侧栏让分类和主题按钮保持可见，
+   * 右侧设置行可独立滚动。
+   */
   background: var(--bg);
   border-right: 1px solid var(--line);
   height: 100vh;
@@ -82,6 +107,9 @@ body {
 }
 
 .theme-icon-button {
+  /*
+   * 设计要求中的纯图标主题切换按钮。
+   */
   align-items: center;
   background: var(--card);
   border: 1px solid var(--line);
@@ -97,6 +125,10 @@ body {
 }
 
 .nav-list {
+  /*
+   * 分类列表可能高于视口，因此只让列表自身滚动，
+   * 侧栏保持固定。
+   */
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -121,12 +153,14 @@ body {
 }
 
 .content {
-  max-width: 1120px;
   padding: 36px 72px 72px;
-  width: 100%;
+  width: var(--content-width);
 }
 
 .content-header {
+  /*
+   * 头部区域组合当前章节标题和扩展总开关。
+   */
   align-items: center;
   background: var(--card);
   border-radius: 8px;
@@ -147,18 +181,26 @@ h1 {
 }
 
 .section-body {
+  /*
+   * 设置行由 options.js 动态渲染；
+   * 这里的 body 只控制它们的纵向排列。
+   */
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  /* gap: 22px; */
 }
 
 .setting-row {
+  /*
+   * 每一行设置都由文字列和固定宽度控制列组成，
+   * 与样例 UI 的右对齐控件一致。
+   */
   align-items: center;
   background: var(--card);
-  border-radius: 8px;
+  /* border-radius: 8px; */
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(320px, 1fr) 180px;
+  grid-template-columns: minmax(320px, 1fr) 240px;
   padding: 16px 18px;
 }
 
@@ -174,6 +216,9 @@ h1 {
 }
 
 .switch {
+  /*
+   * 开关外层用于把自定义开关对齐到右侧控制列。
+   */
   display: inline-flex;
   justify-self: end;
 }
@@ -219,6 +264,9 @@ h1 {
 input[type="number"],
 select,
 .text-field {
+  /*
+   * 动态生成的数字输入和下拉选择控件共用的字段样式。
+   */
   background: var(--card);
   border: 1px solid var(--field);
   border-radius: 4px;
@@ -229,11 +277,52 @@ select,
   width: 180px;
 }
 
+select {
+  appearance: none;
+  background-color: var(--card);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
+    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 19px,
+    calc(100% - 14px) 19px;
+  background-repeat: no-repeat;
+  background-size: 8px 8px, 8px 8px;
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--field));
+  cursor: pointer;
+  padding-right: 42px;
+  width: 100%;
+}
+
+select:hover {
+  border-color: var(--accent);
+}
+
+select:focus,
+input[type="number"]:focus,
+.text-field:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+  outline: none;
+}
+
+:root[data-theme="dark"] select {
+  background-color: var(--soft);
+}
+
 .button-row {
+  /*
+   * 导入 / 导出和重置行会在控制列中放置多个操作按钮。
+   */
   align-items: center;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.button-row button {
+  min-width: 96px;
+  white-space: nowrap;
 }
 
 button.primary,
@@ -266,6 +355,9 @@ button.linkish {
 }
 
 .table {
+  /*
+   * 快捷键表格使用紧凑行高，让完整 B 站默认快捷键列表仍然便于浏览。
+   */
   background: var(--card);
   border-collapse: collapse;
   border-radius: 8px;
@@ -297,10 +389,13 @@ kbd {
 }
 
 .danger {
-  color: var(--accent-dark);
+  color: var(--danger);
 }
 
 .notice {
+  /*
+   * 用于风险网络 / CDN 设置前的信息提示行。
+   */
   background: var(--soft);
   border-radius: 4px;
   color: var(--muted);
@@ -308,6 +403,10 @@ kbd {
 }
 
 .shortcut-dialog {
+  /*
+   * 原生 dialog 用于捕获新的键盘快捷键，
+   * 不需要离开当前设置章节。
+   */
   background: var(--card);
   border: 1px solid var(--field);
   border-radius: 8px;

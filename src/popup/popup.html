@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
-  BiliArm popup.
+  BiliArm 弹窗。
 
   SPDX-License-Identifier: MIT
-  Copyright (c) 2026 BiliArm contributors
+  版权所有 (c) 2026 BiliArm 贡献者
 -->
 <html lang="zh-CN">
   <head>
@@ -13,7 +13,9 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
+    <!-- 浏览器工具栏弹窗：紧凑的快捷设置入口。 -->
     <main class="popup">
+      <!-- UI 参考图要求的顶部品牌区域：名称、主题图标和 logo。 -->
       <header class="hero">
         <div>
           <h1>BiliArm</h1>
@@ -25,11 +27,13 @@
         </div>
       </header>
 
+      <!-- 简介文字块，无需打开完整设置页也能提供基本上下文。 -->
       <section class="panel intro-panel">
         <div>欢迎使用 BiliArm</div>
         <div class="intro-muted">首页净化、黑名单、播放器快捷键和观看增强。</div>
       </section>
 
+      <!-- 四个快捷操作。popup.js 负责切换状态并更新视觉开关。 -->
       <section class="popup-section">
         <h2>快捷设置</h2>
         <button id="toggleEnabled" class="quick-button" type="button">
@@ -62,12 +66,14 @@
         </button>
       </section>
 
+      <!-- 版本号会在运行时由 popup.js 使用 manifest 元数据替换。 -->
       <footer class="footer">
         <span id="versionText">版本 0.2.0</span>
         <span>© 2026 Armoen软件</span>
       </footer>
     </main>
 
+    <!-- 共享配置必须在 popup.js 前加载，确保快捷开关使用同一套结构。 -->
     <script src="../common/config.js"></script>
     <script src="popup.js"></script>
   </body>

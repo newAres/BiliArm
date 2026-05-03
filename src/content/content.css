@@ -1,23 +1,25 @@
 /*
- * BiliArm content styles.
+ * BiliArm 内容脚本样式。
  *
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 BiliArm contributors
+ * 版权所有 (c) 2026 BiliArm 贡献者
  *
- * The visual behavior is inspired by the reviewed CRX extensions, but the CSS
- * selectors and comments are rewritten for BiliArm.
+ * 视觉行为参考了审阅过的 CRX 扩展，
+ * CSS 选择器和注释已为 BiliArm 重新编写。
  */
 
 .biliarm-hidden {
+  /*
+   * 通用隐藏工具类，用于功能需要立即强制隐藏元素的场景。
+   */
   display: none !important;
 }
 
 /*
- * Better Bilibili hides the homepage carousel and non-video floor cards with
- * CSS at document_start. BiliArm keeps the same early-hide behavior to avoid a
- * visible flash before JavaScript scans the feed. If the user disables homepage
- * cleaning, content.js adds .biliarm-home-clean-off to <html>, and these rules
- * stop applying.
+ * Better Bilibili 会在 document_start 阶段用 CSS 隐藏首页轮播和非视频楼层卡片。
+ * BiliArm 保留相同的提前隐藏行为，避免 JavaScript 扫描推荐流前出现可见闪烁。
+ * 如果用户关闭首页净化，content.js 会给 <html> 添加 .biliarm-home-clean-off，
+ * 这些规则随即停止生效。
  */
 :root:not(.biliarm-home-clean-off) .container > .recommended-swipe,
 :root:not(.biliarm-home-clean-off) .is-version8 > .recommended-swipe,
@@ -34,17 +36,27 @@
 
 :root:not(.biliarm-home-clean-off) .is-version8,
 :root:not(.biliarm-home-clean-off) .container {
+  /*
+   * 请求级和 DOM 级过滤移除轮播 / 楼层 / 直播模块后，
+   * 保持首页卡片网格紧凑。
+   */
   column-gap: 1.5rem !important;
   row-gap: 1.3rem !important;
 }
 
 :root:not(.biliarm-home-clean-off) .is-version8 > *,
 :root:not(.biliarm-home-clean-off) .container > * {
+  /*
+   * 重置网格直接子项的外边距，避免隐藏卡片后推荐流布局留下偏移。
+   */
   margin: 0 !important;
 }
 
 :root:not(.biliarm-home-clean-off) .is-version8,
 :root:not(.biliarm-home-clean-off) .container {
+  /*
+   * 默认三列，随后通过下面的媒体查询扩展列数。
+   */
   grid-template-columns: repeat(3, 1fr) !important;
 }
 
@@ -73,10 +85,16 @@
 }
 
 .biliarm-card-hidden {
+  /*
+   * 普通过滤模式：彻底移除卡片。
+   */
   display: none !important;
 }
 
 .biliarm-card-debug {
+  /*
+   * 调试过滤模式：保留卡片可见，并绘制原因标记。
+   */
   outline: 2px dashed #ec4899 !important;
   position: relative !important;
 }
@@ -97,6 +115,9 @@
 }
 
 .biliarm-block-actions {
+  /*
+   * 添加在受支持卡片作者信息旁边的内联按钮组。
+   */
   align-items: center;
   display: inline-flex;
   gap: 6px;
@@ -105,6 +126,9 @@
 }
 
 .biliarm-mini-button {
+  /*
+   * 紧凑按钮需要融入 B 站卡片，同时尽量不改变卡片高度。
+   */
   background: #eef3f8;
   border: 1px solid #cbd6e2;
   border-radius: 4px;
@@ -122,6 +146,10 @@
 }
 
 .biliarm-overlay {
+  /*
+   * 标题、进度、状态和时钟快捷键共用的浮层。
+   * B 站播放器控件也会创建浮层，因此这里使用很高的 z-index。
+   */
   background: rgba(9, 21, 33, 0.78);
   border-radius: 4px;
   color: #fff;
@@ -147,6 +175,10 @@
 }
 
 .biliarm-video-scale-50 {
+  /*
+   * 保留缩放工具类以兼容早期样式；
+   * 当前 content.js 会直接把 transform 应用到 video 元素上。
+   */
   transform: scale(0.5);
   transform-origin: center center;
 }
