@@ -125,7 +125,18 @@
       ".feed-card:has(a[href*='/bangumi/'])",
       ".feed-card:has(a[href*='/anime/'])",
       ".feed-card:has(a[href*='/guochuang/'])",
-      "a[href*='live.bilibili.com']"
+      ".bili-feed4-layout > :has(a[href*='live.bilibili.com'])",
+      ".bili-feed4-layout > :has(a[href*='/bangumi/'])",
+      ".bili-feed4-layout > :has(a[href*='/anime/'])",
+      ".bili-feed4-layout > :has(a[href*='/guochuang/'])",
+      ".bili-grid > :has(a[href*='live.bilibili.com'])",
+      ".bili-grid > :has(a[href*='/bangumi/'])",
+      ".bili-grid > :has(a[href*='/anime/'])",
+      ".bili-grid > :has(a[href*='/guochuang/'])",
+      ".recommended-container_floor-aside > :has(a[href*='live.bilibili.com'])",
+      ".recommended-container_floor-aside > :has(a[href*='/bangumi/'])",
+      ".recommended-container_floor-aside > :has(a[href*='/anime/'])",
+      ".recommended-container_floor-aside > :has(a[href*='/guochuang/'])"
     ],
     bottomDanmaku: [
       ".bpx-player-row-dm-wrap",
@@ -325,6 +336,8 @@
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
       ${hideLiveSection ? selectors.liveSection.join(",") + "{display:none!important;}" : ""}
+      ${hideLiveSection ? ".biliarm-hidden-feed-card{display:none!important;}" : ""}
+      ${hideLiveSection ? ".bili-feed4-layout,.bili-grid{grid-auto-flow:dense!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
       .biliarm-preserved-feed-card{display:block!important;}
       .biliarm-preserved-feed-card-start{grid-column-start:1!important;}
@@ -342,6 +355,38 @@
     appendStyleElement(style);
   }
 
+  // B 站首页的卡片外层会随版本变化，这里从命中的内部链接向上找到真正参与栅格布局的直接子项。
+  function findHomeGridItem(node) {
+    if (!node) {
+      return null;
+    }
+
+    const grid = node.closest(".bili-feed4-layout,.bili-grid,.recommended-container_floor-aside");
+    if (grid) {
+      let item = node;
+      while (item && item.parentElement !== grid) {
+        item = item.parentElement;
+      }
+      if (item && item !== grid) {
+        return item;
+      }
+    }
+
+    return node.closest(".floor-single-card,.bili-video-card,.feed-card,.bili-live-card,.live-card");
+  }
+
+  // 统一隐藏整张首页卡片，避免只隐藏图片或链接后留下栅格空洞。
+  function hideHomeFeedCard(node) {
+    const card = findHomeGridItem(node);
+    if (!card || card.classList.contains("biliarm-preserved-feed-card")) {
+      return;
+    }
+
+    card.classList.add("biliarm-hidden-feed-card");
+    card.setAttribute("data-biliarm-hidden", "true");
+    card.style.display = "none";
+  }
+
   // 首页直播/番剧/国创卡片有时只暴露内部链接，CSS 不能总是隐藏到卡片容器，这里做一次 DOM 兜底。
   function hideLiveModules() {
     if (!currentConfig.enabled || !currentConfig.pageCleanup.removeLiveSection) {
@@ -349,16 +394,13 @@
     }
 
     Array.from(document.querySelectorAll("a[href*='live.bilibili.com'],a[href*='/bangumi/'],a[href*='/anime/'],a[href*='/guochuang/']")).forEach((link) => {
-      const container = link.closest(".bili-video-card,.feed-card,.floor-single-card,.bili-live-card,.live-card,[class*='card'],[class*='Card']");
-      if (container) {
-        container.style.display = "none";
-      }
+      hideHomeFeedCard(link);
     });
 
     Array.from(document.querySelectorAll(".floor-single-card,.bili-video-card,.feed-card")).forEach((card) => {
       const label = getLabel(card);
       if (["番剧", "国创", "综艺", "动漫", "直播"].some((text) => label.includes(text))) {
-        card.style.display = "none";
+        hideHomeFeedCard(card);
       }
     });
   }
@@ -534,6 +576,10 @@
 
     const clones = queryAll(selectors.homeFeedCard)
       .filter((card) => !card.classList.contains("biliarm-preserved-feed-card"))
+      .filter((card) => {
+        const gridItem = findHomeGridItem(card);
+        return !gridItem || !gridItem.classList.contains("biliarm-hidden-feed-card");
+      })
       .slice(0, 24)
       .map((card) => {
         const clone = card.cloneNode(true);
