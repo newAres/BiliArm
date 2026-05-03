@@ -87,6 +87,7 @@
       ".player-mode-webfullscreen"
     ],
     cleanupCarousel: [
+      ".recommended-swipe",
       ".large-header-v1 .banner",
       ".bili-header .animated-banner"
     ],
@@ -306,7 +307,9 @@
 
     style.textContent = `
       ${hideCarousel ? selectors.cleanupCarousel.join(",") + "{display:none!important;}" : ""}
+      ${hideCarousel ? ".bili-video-card:has(.bili-video-card__skeleton),.floor-card.floor-skeleton{display:none!important;}" : ""}
       ${hideLiveSection ? ".biliarm-hidden-feed-card{display:none!important;}" : ""}
+      ${hideLiveSection ? ".floor-single-card:has(a[href*='live.bilibili.com']),.floor-single-card:has(a[href*='/bangumi/']),.floor-single-card:has(a[href*='/anime/']),.floor-single-card:has(a[href*='/guochuang/']){display:none!important;}" : ""}
       ${hideLiveSection ? ".bili-feed4-layout,.bili-grid{grid-auto-flow:dense!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
       .biliarm-preserved-feed-card{display:block!important;}
@@ -355,6 +358,19 @@
     card.style.display = "none";
   }
 
+  function isBlockedSpecialHomeCard(card) {
+    const hrefs = Array.from(card.querySelectorAll("a[href]"))
+      .map((link) => link.href)
+      .join(" ");
+    const label = getLabel(card);
+
+    if (/live\.bilibili\.com|\/bangumi\/|\/anime\/|\/guochuang\//i.test(hrefs)) {
+      return true;
+    }
+
+    return card.matches(".floor-single-card") && !label.trim();
+  }
+
   // 首页直播/番剧/国创卡片有时只暴露内部链接，CSS 不能总是隐藏到卡片容器，这里做一次 DOM 兜底。
   function hideLiveModules() {
     if (!currentConfig.enabled || !currentConfig.pageCleanup.removeLiveSection) {
@@ -365,8 +381,12 @@
       hideHomeFeedCard(link);
     });
 
-    Array.from(document.querySelectorAll(".bili-video-card,.feed-card,.bili-live-card,.live-card")).forEach((card) => {
+    Array.from(document.querySelectorAll(".bili-video-card,.feed-card,.bili-live-card,.live-card,.floor-single-card")).forEach((card) => {
       const label = getLabel(card);
+      if (isBlockedSpecialHomeCard(card)) {
+        hideHomeFeedCard(card);
+        return;
+      }
       if (["番剧", "国创", "综艺", "动漫", "直播"].some((text) => label.includes(text))) {
         hideHomeFeedCard(card);
       }
