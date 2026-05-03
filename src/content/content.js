@@ -7,6 +7,7 @@
   const PRELOAD_STYLE_ID = "biliarm-preload-style";
   const ROUTE_EVENT = "biliarm-route-change";
   const PLAYER_READY_TIMEOUT = 10000;
+  const CONTROL_READY_TIMEOUT = 6000;
 
   let currentConfig = CONFIG.normalizeConfig();
   let lastUrl = location.href;
@@ -53,7 +54,15 @@
       ".bpx-player-ctrl-light",
       ".bpx-player-ctrl-btn[aria-label*='灯']",
       ".bilibili-player-video-btn-light",
-      ".bilibili-player-video-btn-light-off"
+      ".bilibili-player-video-btn-light-off",
+      ".bpx-player-ctrl-light-off",
+      ".bpx-player-ctrl-light-on"
+    ],
+    playerMenuButton: [
+      ".bpx-player-ctrl-setting",
+      ".bpx-player-ctrl-more",
+      ".bilibili-player-video-btn-setting",
+      ".bilibili-player-video-btn-more"
     ],
     playerContainer: [
       "#bilibili-player",
@@ -92,6 +101,9 @@
       ".bili-live-card",
       ".live-card",
       ".live-room-card",
+      "[class*='live-card']",
+      "[class*='LiveCard']",
+      "[class*='live-room']",
       ".floor-single-card:has(a[href*='live.bilibili.com'])",
       ".bili-video-card:has(a[href*='live.bilibili.com'])",
       ".feed-card:has(a[href*='live.bilibili.com'])",
@@ -297,6 +309,7 @@
       ${hideLiveSection ? selectors.liveSection.join(",") + "{display:none!important;}" : ""}
       ${hideBottomDanmaku ? selectors.bottomDanmaku.join(",") + "{display:none!important;}" : ""}
       .biliarm-preserved-feed-card{display:block!important;}
+      .biliarm-preserved-feed-card-start{grid-column-start:1!important;}
     `;
   }
 
@@ -309,6 +322,20 @@
     style.id = PRELOAD_STYLE_ID;
     style.textContent = `${selectors.cleanupCarousel.join(",")}{display:none!important;}`;
     appendStyleElement(style);
+  }
+
+  // 首页直播卡片有时只暴露 live 链接，CSS 不能总是隐藏到卡片容器，这里做一次 DOM 兜底。
+  function hideLiveModules() {
+    if (!currentConfig.enabled || !currentConfig.pageCleanup.removeLiveSection) {
+      return;
+    }
+
+    Array.from(document.querySelectorAll("a[href*='live.bilibili.com']")).forEach((link) => {
+      const container = link.closest(".bili-video-card,.feed-card,.floor-single-card,.bili-live-card,.live-card,[class*='card'],[class*='Card']");
+      if (container) {
+        container.style.display = "none";
+      }
+    });
   }
 
   // 默认关闭弹幕通过 B 站自带开关完成，避免直接改播放器内部状态。
@@ -345,7 +372,16 @@
       player.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 120, clientY: 120 }));
     }
 
-    const button = queryAny(selectors.lightButton) || findNativeControlByText(["关灯", "开灯"], selectors.lightButton);
+    let button = queryAny(selectors.lightButton) || findNativeControlByText(["关灯", "开灯"], selectors.lightButton);
+
+    if (!button) {
+      queryAll(selectors.playerMenuButton).forEach((menuButton) => {
+        menuButton.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        menuButton.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+        clickElement(menuButton);
+      });
+      button = queryAny(selectors.lightButton) || findNativeControlByText(["关灯", "开灯"], selectors.lightButton);
+    }
 
     if (!button) {
       return;
@@ -355,6 +391,9 @@
     if (beforeState !== desired) {
       clickElement(button);
       window.setTimeout(() => {
+        queryAll(selectors.playerMenuButton).forEach((menuButton) => {
+          menuButton.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        });
         const latestButton = queryAny(selectors.lightButton) || findNativeControlByText(["关灯", "开灯"], selectors.lightButton);
         if (latestButton && isBilibiliLightsOff(latestButton) !== desired) {
           clickElement(latestButton);
@@ -363,6 +402,13 @@
     }
 
     applyState.lightMode = desired;
+  }
+
+  // B 站控制栏和设置浮层有延迟，关灯失败时用短间隔重试几次。
+  function scheduleLightsOff(desired) {
+    [0, 250, 700, 1400].forEach((delay) => {
+      window.setTimeout(() => setLightsOff(desired), delay);
+    });
   }
 
   // 宽屏后滚动到播放器区域，但保留顶部安全距离，防止标题栏遮住画面。
@@ -376,7 +422,7 @@
 
     window.setTimeout(() => {
       const rect = player.getBoundingClientRect();
-      const safeTop = 24;
+      const safeTop = 60;
       const centerTop = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
       const topAligned = window.scrollY + rect.top - safeTop;
       const targetTop = Math.min(centerTop, topAligned);
@@ -385,6 +431,25 @@
         behavior: "smooth"
       });
     }, 300);
+  }
+
+  // 宽屏按钮比 video 更早出现，快速轮询可以让默认宽屏更接近进页即生效。
+  function waitForPlayerControls(callback) {
+    const startedAt = Date.now();
+
+    function tick() {
+      const hasControl = queryAny([...selectors.wideButton, ...selectors.webFullscreenButton]);
+      if (hasControl) {
+        callback();
+        return;
+      }
+
+      if (Date.now() - startedAt < CONTROL_READY_TIMEOUT) {
+        window.setTimeout(tick, 50);
+      }
+    }
+
+    tick();
   }
 
   // 根据配置切换宽屏或网页全屏；每个 URL 只自动应用一次，避免来回切换。
@@ -442,7 +507,7 @@
       return [];
     }
 
-    return queryAll(selectors.homeFeedCard)
+    const clones = queryAll(selectors.homeFeedCard)
       .filter((card) => !card.classList.contains("biliarm-preserved-feed-card"))
       .slice(0, 24)
       .map((card) => {
@@ -451,6 +516,12 @@
         clone.setAttribute("data-biliarm-preserved", "true");
         return clone;
       });
+
+    if (clones[0]) {
+      clones[0].classList.add("biliarm-preserved-feed-card-start");
+    }
+
+    return clones;
   }
 
   // 将等待保留的旧卡片追加回首页列表。
@@ -585,7 +656,7 @@
       return;
     }
 
-    setLightsOff(window.scrollY > 120);
+    scheduleLightsOff(window.scrollY > 120);
   }
 
   // 滚动事件节流，避免频繁查找播放器控件。
@@ -628,6 +699,12 @@
       return;
     }
 
+    hideLiveModules();
+
+    if (currentConfig.player.defaultViewMode !== "normal") {
+      waitForPlayerControls(applyViewMode);
+    }
+
     waitForPlayer((video) => {
       bindEndedHandler(video);
 
@@ -648,10 +725,9 @@
       }
 
       if (currentConfig.light.autoToggleOnScroll) {
-        setLightsOff(window.scrollY > 120);
+        scheduleLightsOff(window.scrollY > 120);
       } else if (currentConfig.light.defaultLightsOff) {
-        setLightsOff(true);
-        window.setTimeout(() => setLightsOff(true), 800);
+        scheduleLightsOff(true);
       }
     });
   }
@@ -670,6 +746,9 @@
     bindDomObserver();
     bindScrollHandler();
     bindHomeFeedRefreshKeeper();
+    if (currentConfig.enabled && currentConfig.player.defaultViewMode !== "normal") {
+      waitForPlayerControls(applyViewMode);
+    }
     scheduleApply(0);
 
     CONFIG.onConfigChanged((nextConfig) => {
