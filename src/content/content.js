@@ -1,21 +1,21 @@
 /*
- * BiliArm 内容脚本。
+ * BilibiliToys 内容脚本。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 功能行为来自对 Better Bilibili 2026.02.13 与 Bilibili Player Extension
- * 3.0.2 CRX 包的审阅结果。下面的实现是 BiliArm 的模块化重写，
+ * 3.0.2 CRX 包的审阅结果。下面的实现是 BilibiliToys 的模块化重写，
  * 带有注释，并不是直接复制压缩后的原始脚本。
  */
 
 (function () {
   "use strict";
 
-  const CONFIG = globalThis.BiliArmConfig;
-  const PAGE_AGENT_ID = "biliarm-page-agent";
-  const PAGE_CONFIG_EVENT = "BiliArmPageConfig";
-  const RUNTIME_STYLE_ID = "biliarm-dynamic-style";
+  const CONFIG = globalThis.BilibiliToysConfig;
+  const PAGE_AGENT_ID = "bilibili-toys-page-agent";
+  const PAGE_CONFIG_EVENT = "BilibiliToysPageConfig";
+  const RUNTIME_STYLE_ID = "bilibili-toys-dynamic-style";
   const OBSERVER_DEBOUNCE_MS = 350;
 
   /*
@@ -29,6 +29,7 @@
   let lastVideo = null;
   let overlayTimers = new Map();
   let videoScaleIndex = 2;
+  let appliedDanmakuOffKey = "";
   let appliedViewModeKey = "";
   let smartLightObserver = null;
   let smartLightTarget = null;
@@ -49,7 +50,12 @@
       ".bilibili-player video",
       ".player-container video",
       "#bofqi video",
+      "[aria-label=\"哔哩哔哩播放器\"] video",
       ".bpx-player-video-wrap video",
+      "#bilibiliPlayer bwp-video",
+      "#bilibili-player bwp-video",
+      ".bilibili-player bwp-video",
+      ".player-container bwp-video",
       "video"
     ],
     card: [
@@ -169,7 +175,7 @@
         }
 
         if (!response || !response.ok) {
-          reject(new Error(response && response.error ? response.error : "BiliArm message failed"));
+          reject(new Error(response && response.error ? response.error : "BilibiliToys message failed"));
           return;
         }
 
@@ -269,7 +275,12 @@
   }
 
   function findVideo() {
-    return queryAny(selectors.video);
+    const videos = queryAll(selectors.video);
+
+    return videos.find((video) => {
+      const rect = video.getBoundingClientRect();
+      return typeof video.play === "function" && typeof video.pause === "function" && rect.width > 0 && rect.height > 0;
+    }) || videos[0] || null;
   }
 
   function findPlayerContainer() {
@@ -364,34 +375,34 @@
       return;
     }
 
-    card.setAttribute("data-biliarm-reason", reason);
+    card.setAttribute("data-bilibili-toys-reason", reason);
     card.setAttribute("block-reason", reason);
-    card.setAttribute("data-biliarm-card-hidden", "true");
+    card.setAttribute("data-bilibili-toys-card-hidden", "true");
 
     if (config.homeClean.showReasons || config.playRecommend.showReasons) {
-      card.classList.add("biliarm-card-debug");
+      card.classList.add("bilibili-toys-card-debug");
     } else {
-      card.classList.add("biliarm-card-hidden");
+      card.classList.add("bilibili-toys-card-hidden");
     }
   }
 
-  function clearBiliArmMarks() {
+  function clearBilibiliToysMarks() {
     /*
      * 功能开关必须可逆。过滤通过给卡片添加类名实现，
      * 因此配置变化时需要移除旧标记，让下一次扫描只应用当前启用的规则。
      */
-    document.querySelectorAll("[data-biliarm-processed],[data-biliarm-play-processed],.biliarm-card-hidden,.biliarm-card-debug").forEach((node) => {
-      node.classList.remove("biliarm-card-hidden", "biliarm-card-debug");
-      node.removeAttribute("data-biliarm-reason");
+    document.querySelectorAll("[data-bilibili-toys-processed],[data-bilibili-toys-play-processed],.bilibili-toys-card-hidden,.bilibili-toys-card-debug").forEach((node) => {
+      node.classList.remove("bilibili-toys-card-hidden", "bilibili-toys-card-debug");
+      node.removeAttribute("data-bilibili-toys-reason");
       node.removeAttribute("block-reason");
-      node.removeAttribute("data-biliarm-card-hidden");
-      delete node.dataset.biliarmProcessed;
-      delete node.dataset.biliarmPlayProcessed;
+      node.removeAttribute("data-bilibili-toys-card-hidden");
+      delete node.dataset.bilibiliToysProcessed;
+      delete node.dataset.bilibiliToysPlayProcessed;
     });
   }
 
   function updateRootStateClasses() {
-    document.documentElement.classList.toggle("biliarm-home-clean-off", !moduleOn("homeClean"));
+    document.documentElement.classList.toggle("bilibili-toys-home-clean-off", !moduleOn("homeClean"));
   }
 
   /*
@@ -537,7 +548,7 @@
    * 函数具备幂等性，重复 DOM 扫描不会生成重复按钮。
    */
   function createBlockActions(card, info) {
-    if (!featureOn("blacklist", "blacklist.localEnabled") || card.querySelector(".biliarm-block-actions")) {
+    if (!featureOn("blacklist", "blacklist.localEnabled") || card.querySelector(".bilibili-toys-block-actions")) {
       return;
     }
 
@@ -547,15 +558,15 @@
 
     const host = queryAny(selectors.authorLink, card)?.parentElement || card;
     const wrapper = document.createElement("span");
-    wrapper.className = "biliarm-block-actions";
+    wrapper.className = "bilibili-toys-block-actions";
     const buttons = {};
 
     if (config.blacklist.showLocalButton) {
       const localButton = document.createElement("button");
       localButton.type = "button";
-      localButton.className = "biliarm-mini-button";
+      localButton.className = "bilibili-toys-mini-button";
       localButton.textContent = "拉黑本地";
-      localButton.title = "仅保存到 BiliArm 本地黑名单";
+      localButton.title = "仅保存到 BilibiliToys 本地黑名单";
       localButton.addEventListener("click", async (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -568,7 +579,7 @@
     if (config.blacklist.showAccountButton && config.blacklist.accountBlockEnabled) {
       const accountButton = document.createElement("button");
       accountButton.type = "button";
-      accountButton.className = "biliarm-mini-button";
+      accountButton.className = "bilibili-toys-mini-button";
       accountButton.textContent = "账号拉黑";
       accountButton.title = "调用 B 站账号拉黑接口";
       accountButton.addEventListener("click", async (event) => {
@@ -620,11 +631,11 @@
     }
 
     for (const card of cards) {
-      if (card.dataset.biliarmProcessed === "true") {
+      if (card.dataset.bilibiliToysProcessed === "true") {
         continue;
       }
 
-      card.dataset.biliarmProcessed = "true";
+      card.dataset.bilibiliToysProcessed = "true";
       const info = extractCardInfo(card);
 
       if (moduleOn("blacklist")) {
@@ -669,11 +680,11 @@
     }
 
     for (const card of cards) {
-      if (card.dataset.biliarmPlayProcessed === "true") {
+      if (card.dataset.bilibiliToysPlayProcessed === "true") {
         continue;
       }
 
-      card.dataset.biliarmPlayProcessed = "true";
+      card.dataset.bilibiliToysPlayProcessed = "true";
       const info = extractCardInfo(card);
 
       if (config.playRecommend.hideBlockedUsers && await isLocalBlocked(info.uid)) {
@@ -709,14 +720,16 @@
     style.textContent = `
       ${hideBottomDanmaku ? ".bpx-player-row-dm-wrap,.bilibili-player-video-danmaku .mode-bottom{display:none!important;}" : ""}
       ${showTopicTags ? ":root{--style-property-show-tag-container:block;}" : ":root{--style-property-show-tag-container:none;}"}
-      ${hidePinnedAdComment ? ".biliarm-pinned-ad-comment{display:none!important;}" : ""}
-      ${useCommentAreaStyle ? ":root{--biliarm-comment-fixed-margin:1rem;--biliarm-comment-fixed-bg:#f0f8fff0;--biliarm-comment-fixed-radius:.8rem;--biliarm-comment-fixed-border:1px solid #a5a5a54d;--biliarm-comment-fixed-shadow:rgb(125 131 127 / 14%) 0 0 8px 1px;--biliarm-comment-fixed-padding:5px 0;}" : ""}
-      ${useCommentBoxStyle ? ":root{--biliarm-comment-box-margin:1rem;--biliarm-comment-editor-border:1px solid rgb(0 0 0 / 5%);--biliarm-comment-editor-radius:.75rem;--biliarm-comment-editor-bg:transparent;--biliarm-comment-tool-radius:6px;}" : ""}
+      ${hidePinnedAdComment ? ".bilibili-toys-pinned-ad-comment{display:none!important;}" : ""}
+      ${useCommentAreaStyle ? ":root{--bilibili-toys-comment-fixed-margin:1rem;--bilibili-toys-comment-fixed-bg:#f0f8fff0;--bilibili-toys-comment-fixed-radius:.8rem;--bilibili-toys-comment-fixed-border:1px solid #a5a5a54d;--bilibili-toys-comment-fixed-shadow:rgb(125 131 127 / 14%) 0 0 8px 1px;--bilibili-toys-comment-fixed-padding:5px 0;}" : ""}
+      ${useCommentBoxStyle ? ":root{--bilibili-toys-comment-box-margin:1rem;--bilibili-toys-comment-editor-border:1px solid rgb(0 0 0 / 5%);--bilibili-toys-comment-editor-radius:.75rem;--bilibili-toys-comment-editor-bg:transparent;--bilibili-toys-comment-tool-radius:6px;}" : ""}
       ${usePageStyles && config.styles.home ? ".container > .recommended-swipe,.is-version8 > .recommended-swipe{display:none!important;}" : ""}
       ${usePageStyles && config.styles.search ? ".search-page .ad-report,.search-page [class*='ad']{display:none!important;}" : ""}
-      ${usePageStyles && config.styles.play ? ".biliarm-player-soften{border-radius:6px!important;}" : ""}
+      ${usePageStyles && config.styles.play ? ".bilibili-toys-player-soften{border-radius:6px!important;}" : ""}
       ${usePageStyles && config.styles.bangumi ? "#comment-body > div > div > .reply-warp > .fixed-reply-box{display:none!important;}.home-container > div > div[class^='navTools'] > div > a[title='新版反馈'],.home-container > div > div[class^='navTools'] > div > a[title='帮助反馈']{display:none!important;}" : ""}
       ${usePageStyles && config.styles.list ? "#mirror-vdcon > .playlist-container--right > .recommend-list-container > div > .card-box{box-shadow:rgb(125 131 127 / 24%) 0 0 4px 1px!important;background-color:rgb(208 222 233 / 67%)!important;padding:5px!important;border-radius:10px!important;transition:background-color .5s ease,box-shadow .3s ease!important;}#mirror-vdcon > .playlist-container--right > .recommend-list-container > div > .card-box:hover{background-color:rgb(204 213 213)!important;box-shadow:rgb(199 206 212 / 85%) 0 0 4px 1px!important;}#mirror-vdcon > .playlist-container--right > .recommend-list-container{margin-top:10px!important;padding-top:10px!important;}#mirror-vdcon > .playlist-container--right > .recommend-list-container > .recommend-video-card{padding:3px!important;margin-bottom:10px!important;}" : ""}
+      html.bilibili-toys-lights-off::before{content:"";position:fixed;inset:0;background:rgb(0 0 0 / 72%);pointer-events:none;z-index:9998;}
+      html.bilibili-toys-lights-off #bilibili-player,html.bilibili-toys-lights-off .player-container,html.bilibili-toys-lights-off #bofqi{position:relative!important;z-index:9999!important;}
     `;
   }
 
@@ -726,6 +739,11 @@
      * 只有页面仍在显示弹幕时才点击关闭。
      */
     if (!moduleOn("playerDefaults") || !config.player.defaultDanmakuOff) {
+      return;
+    }
+
+    const key = `${location.origin}${location.pathname}${location.search}`;
+    if (appliedDanmakuOffKey === key) {
       return;
     }
 
@@ -739,6 +757,7 @@
       if (button.checked) {
         clickElement(button);
       }
+      appliedDanmakuOffKey = key;
       return;
     }
 
@@ -746,6 +765,7 @@
     if (label.includes("关闭") || !label.includes("开启")) {
       clickElement(button);
     }
+    appliedDanmakuOffKey = key;
   }
 
   function applyDefaultViewMode() {
@@ -902,6 +922,22 @@
     return true;
   }
 
+  function toggleBilibiliToysLightOverlay(mode) {
+    /*
+     * B 站播放器偶尔不会挂载原生关灯控件。此时提供一个只在本页生效的兜底暗场，
+     * 保证快捷键有明确反馈；优先级仍低于上面的原生 lightoff 复选框。
+     */
+    const root = document.documentElement;
+
+    if (mode === 0) {
+      root.classList.toggle("bilibili-toys-lights-off");
+      return true;
+    }
+
+    root.classList.toggle("bilibili-toys-lights-off", mode === 2);
+    return true;
+  }
+
   function toggleBilibiliLight(mode) {
     /*
      * 部分播放器版本会把关灯复选框藏在设置 hover 面板中。
@@ -914,15 +950,19 @@
     const settingButton = document.querySelector(".bilibili-player-video-btn-setting,.bpx-player-ctrl-setting");
 
     if (!settingButton) {
-      return false;
+      return toggleBilibiliToysLightOverlay(mode);
     }
 
     settingButton.addEventListener("mouseover", () => {
       settingButton.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
-      setTimeout(() => clickLightCheckbox(mode), 100);
+      setTimeout(() => {
+        if (!clickLightCheckbox(mode)) {
+          toggleBilibiliToysLightOverlay(mode);
+        }
+      }, 100);
     }, { once: true });
     settingButton.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-    return false;
+    return true;
   }
 
   function bindVideoEvents() {
@@ -967,11 +1007,13 @@
       return "未设置";
     }
 
+    const keyText = shortcut.code === "Slash" ? "/" : shortcut.code.replace(/^Key/, "").replace(/^Digit/, "");
+
     return [
       shortcut.ctrl ? "Ctrl" : "",
       shortcut.alt ? "Alt" : "",
       shortcut.shift ? "Shift" : "",
-      shortcut.code.replace(/^Key/, "").replace(/^Digit/, "")
+      keyText
     ].filter(Boolean).join(" + ");
   }
 
@@ -1017,12 +1059,12 @@
      * 每个 id 复用同一个浮层，使重复触发进度 / 时间 / 标题快捷键时原地更新，
      * 而不是堆叠新的 DOM 节点。
      */
-    let overlay = document.getElementById(`biliarm-overlay-${id}`);
+    let overlay = document.getElementById(`bilibili-toys-overlay-${id}`);
 
     if (!overlay) {
       overlay = document.createElement("div");
-      overlay.id = `biliarm-overlay-${id}`;
-      overlay.className = `biliarm-overlay ${position || ""}`.trim();
+      overlay.id = `bilibili-toys-overlay-${id}`;
+      overlay.className = `bilibili-toys-overlay ${position || ""}`.trim();
       document.documentElement.appendChild(overlay);
     }
 
@@ -1048,6 +1090,60 @@
    */
   function toggleDanmaku() {
     clickElement(queryAny(selectors.danmakuButton) || findButton(["弹幕"], selectors.danmakuButton));
+  }
+
+  function togglePlayPause() {
+    /*
+     * 空格播放 / 暂停不能只依赖 B 站播放器按钮。新版播放器的按钮类名和挂载时机经常变化，
+     * 直接控制当前可见 video 更稳定；按钮点击仅作为找不到 video 时的兜底。
+     */
+    const video = findVideo();
+
+    if (video && typeof video.play === "function" && typeof video.pause === "function") {
+      if (video.paused || video.ended) {
+        video.play().catch(() => {
+          clickElement(queryAny(selectors.playButton) || findButton(["播放", "暂停"], selectors.playButton));
+        });
+      } else {
+        video.pause();
+      }
+      return true;
+    }
+
+    return clickElement(queryAny(selectors.playButton) || findButton(["播放", "暂停"], selectors.playButton));
+  }
+
+  function toggleMute() {
+    const video = findVideo();
+
+    if (video && "muted" in video) {
+      video.muted = !video.muted;
+      showOverlay("status", video.muted ? "静音 On" : "静音 Off");
+      return true;
+    }
+
+    return clickElement(queryAny(selectors.muteButton) || findButton(["静音", "音量"], selectors.muteButton));
+  }
+
+  function toggleFullscreen() {
+    /*
+     * 全屏优先使用标准 Fullscreen API，避免播放器按钮类名变化导致快捷键失效。
+     */
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+      return true;
+    }
+
+    const target = findPlayerContainer() || findVideo() || document.documentElement;
+
+    if (target && target.requestFullscreen) {
+      target.requestFullscreen().catch(() => {
+        clickElement(queryAny(selectors.fullscreenButton) || findButton(["全屏"], selectors.fullscreenButton));
+      });
+      return true;
+    }
+
+    return clickElement(queryAny(selectors.fullscreenButton) || findButton(["全屏"], selectors.fullscreenButton));
   }
 
   function showDanmakuStatus() {
@@ -1079,11 +1175,11 @@
     }
 
     getCaptionItems().forEach((item) => {
-      if (item.dataset.biliarmCaptionBound === "true") {
+      if (item.dataset.bilibiliToysCaptionBound === "true") {
         return;
       }
 
-      item.dataset.biliarmCaptionBound = "true";
+      item.dataset.bilibiliToysCaptionBound = "true";
       item.addEventListener("click", () => rememberCaptionChoice(item));
     });
   }
@@ -1128,16 +1224,24 @@
 
   function seekBy(seconds) {
     const video = findVideo();
-    if (!video || !Number.isFinite(video.duration)) {
+    if (!video) {
       return;
     }
 
-    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    const currentTime = Number(video.currentTime) || 0;
+    const targetTime = Math.max(0, currentTime + seconds);
+    const clampedTime = Number.isFinite(video.duration) ? Math.min(video.duration, targetTime) : targetTime;
+
+    try {
+      video.currentTime = clampedTime;
+    } catch (error) {
+      console.warn("[BilibiliToys] seek failed", error);
+    }
   }
 
   function stepFrame(direction) {
     const video = findVideo();
-    if (!video || !Number.isFinite(video.duration)) {
+    if (!video) {
       return;
     }
 
@@ -1145,7 +1249,15 @@
       video.pause();
     }
 
-    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + direction / 30));
+    const currentTime = Number(video.currentTime) || 0;
+    const targetTime = Math.max(0, currentTime + direction / 30);
+    const clampedTime = Number.isFinite(video.duration) ? Math.min(video.duration, targetTime) : targetTime;
+
+    try {
+      video.currentTime = clampedTime;
+    } catch (error) {
+      console.warn("[BilibiliToys] frame step failed", error);
+    }
   }
 
   function setSpeed(delta) {
@@ -1217,7 +1329,7 @@
     }
 
     const link = document.createElement("a");
-    link.download = `biliarm-screenshot-${video.currentTime.toFixed(3)}.${config.media.screenshotFormat}`;
+    link.download = `bilibili-toys-screenshot-${video.currentTime.toFixed(3)}.${config.media.screenshotFormat}`;
     link.href = canvas.toDataURL(mime, 0.98);
     link.click();
   }
@@ -1276,6 +1388,113 @@
     showOverlay("title", title, "is-center");
   }
 
+  function createShortcutHelpRow(label, shortcutTextValue) {
+    /*
+     * 快捷键帮助弹窗中的单行条目。用 DOM API 生成，避免把用户可修改的
+     * 快捷键名称直接拼接进 HTML。
+     */
+    const row = document.createElement("div");
+    const name = document.createElement("span");
+    const key = document.createElement("kbd");
+
+    row.className = "bilibili-toys-shortcut-help-row";
+    name.textContent = label;
+    key.textContent = shortcutTextValue;
+    row.append(name, key);
+    return row;
+  }
+
+  function renderShortcutHelpColumn(title, rows) {
+    /*
+     * 构建帮助弹窗的一列。左列展示扩展快捷键，右列展示 B 站默认快捷键。
+     */
+    const column = document.createElement("section");
+    const heading = document.createElement("h3");
+
+    column.className = "bilibili-toys-shortcut-help-column";
+    heading.textContent = title;
+    column.appendChild(heading);
+    rows.forEach((row) => column.appendChild(row));
+    return column;
+  }
+
+  function closeShortcutHelp() {
+    const backdrop = document.getElementById("bilibili-toys-shortcut-help");
+
+    if (backdrop) {
+      backdrop.remove();
+    }
+  }
+
+  function showShortcutHelp() {
+    /*
+     * Alt + / 在播放页打开快捷键总览。遮罩点击关闭，弹窗内容阻止冒泡，
+     * 因此用户可以在弹窗内滚动查看全部已启用快捷键。
+     */
+    closeShortcutHelp();
+
+    const backdrop = document.createElement("div");
+    const modal = document.createElement("div");
+    const header = document.createElement("div");
+    const title = document.createElement("div");
+    const close = document.createElement("button");
+    const grid = document.createElement("div");
+    const extensionRows = [];
+    const bilibiliRows = CONFIG.BILIBILI_DEFAULT_SHORTCUTS.map((item) => createShortcutHelpRow(item.label, item.shortcut));
+
+    if (moduleOn("hotkeys") && config.hotkeys.enabled && !config.hotkeys.disableAll) {
+      Object.values(config.hotkeys.shortcuts || {}).forEach((shortcut) => {
+        if (shortcut.enabled && shortcut.code) {
+          extensionRows.push(createShortcutHelpRow(shortcut.label, shortcutToText(shortcut)));
+        }
+      });
+    }
+
+    backdrop.id = "bilibili-toys-shortcut-help";
+    backdrop.className = "bilibili-toys-shortcut-help-backdrop";
+    modal.className = "bilibili-toys-shortcut-help-modal";
+    header.className = "bilibili-toys-shortcut-help-header";
+    title.className = "bilibili-toys-shortcut-help-title";
+    close.className = "bilibili-toys-shortcut-help-close";
+    grid.className = "bilibili-toys-shortcut-help-grid";
+
+    title.textContent = "快捷键";
+    close.type = "button";
+    close.textContent = "关闭";
+    close.addEventListener("click", closeShortcutHelp);
+    backdrop.addEventListener("click", closeShortcutHelp);
+    modal.addEventListener("click", (event) => event.stopPropagation());
+
+    header.append(title, close);
+    grid.append(
+      renderShortcutHelpColumn("BilibiliToys", extensionRows),
+      renderShortcutHelpColumn("Bilibili", bilibiliRows)
+    );
+    modal.append(header, grid);
+    backdrop.appendChild(modal);
+    document.documentElement.appendChild(backdrop);
+  }
+
+  function toggleShortcutHelp() {
+    /*
+     * 快捷键帮助已打开时再次触发同一快捷键会关闭弹窗；
+     * 未打开时则重新收集当前启用快捷键并展示。
+     */
+    if (document.getElementById("bilibili-toys-shortcut-help")) {
+      closeShortcutHelp();
+      return;
+    }
+
+    showShortcutHelp();
+  }
+
+  function isShortcutHelpCloseEvent(event) {
+    /*
+     * 帮助弹窗打开时，Space 和 Esc 默认只关闭弹窗，不再穿透到播放器。
+     */
+    return event.code === "Escape" || event.code === "Space" || event.key === " ";
+  }
+
   function runShortcutAction(id) {
     /*
      * 所有扩展快捷键的分发表。每个处理函数仍会检查自己的功能开关，
@@ -1289,11 +1508,11 @@
       danmakuToggle: () => moduleOn("danmaku") && toggleDanmaku(),
       danmakuStatus: () => moduleOn("danmaku") && showDanmakuStatus(),
       captionToggle: () => moduleOn("danmaku") && config.danmaku.subtitleHotkey && toggleSubtitle(),
-      fullscreen: () => clickElement(queryAny(selectors.fullscreenButton) || findButton(["全屏"], selectors.fullscreenButton)),
+      fullscreen: () => toggleFullscreen(),
       webFullscreen: () => clickElement(queryAny(selectors.webFullscreenButton) || findButton(["网页全屏"], selectors.webFullscreenButton)),
       widescreen: () => !config.player.disableWideMode && clickElement(queryAny(selectors.wideButton) || findButton(["宽屏"], selectors.wideButton)),
-      playPause: () => clickElement(queryAny(selectors.playButton) || findButton(["播放", "暂停"], selectors.playButton)),
-      mute: () => clickElement(queryAny(selectors.muteButton) || findButton(["静音", "音量"], selectors.muteButton)),
+      playPause: () => togglePlayPause(),
+      mute: () => toggleMute(),
       nextVideo: () => clickElement(queryAny(selectors.nextButton) || findButton(["下一个"], selectors.nextButton)),
       shortBackward: () => seekBy(-shortStep),
       longBackward: () => seekBy(-longStep),
@@ -1319,7 +1538,8 @@
       titleOverlay: () => config.danmaku.titleOverlay && showTitle(),
       progressOverlay: () => config.danmaku.progressOverlay && showProgress(),
       clockOverlay: () => config.danmaku.clockOverlay && showClock(),
-      lightsToggle: () => clickElement(queryAny(selectors.lightButton) || findButton(["关灯", "开灯"], selectors.lightButton))
+      lightsToggle: () => toggleBilibiliLight(0),
+      shortcutHelp: () => toggleShortcutHelp()
     };
 
     if (actions[id]) {
@@ -1332,21 +1552,40 @@
      * 提前捕获 keydown，确保播放器获得焦点时快捷键也能工作。
      * 文本输入目标已由上方 isTextInputTarget 跳过。
      */
-    if (event.defaultPrevented || isTextInputTarget(event.target)) {
-      return;
-    }
-
     if (!isPlayerPage()) {
       return;
     }
 
-    if (moduleOn("hotkeys") && config.hotkeys.spacePlayPause && event.code === "Space") {
+    const action = getShortcutAction(event);
+    const helpOpen = Boolean(document.getElementById("bilibili-toys-shortcut-help"));
+
+    if (helpOpen && (isShortcutHelpCloseEvent(event) || action === "shortcutHelp")) {
       event.preventDefault();
-      clickElement(queryAny(selectors.playButton) || findButton(["播放", "暂停"], selectors.playButton));
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      closeShortcutHelp();
       return;
     }
 
-    const action = getShortcutAction(event);
+    if (action === "shortcutHelp") {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      toggleShortcutHelp();
+      return;
+    }
+
+    if (isTextInputTarget(event.target)) {
+      return;
+    }
+
+    if (moduleOn("hotkeys") && config.hotkeys.spacePlayPause && (event.code === "Space" || event.key === " ")) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      togglePlayPause();
+      return;
+    }
 
     if (action) {
       event.preventDefault();
@@ -1427,11 +1666,12 @@
     if (location.href !== currentUrl) {
       currentUrl = location.href;
       lastVideo = null;
+      appliedDanmakuOffKey = "";
       appliedViewModeKey = "";
       smartLightTarget = null;
       homeInitialScanDone = false;
       playInitialScanDone = false;
-      clearBiliArmMarks();
+      clearBilibiliToysMarks();
     }
 
     await processHomeCards();
@@ -1446,7 +1686,7 @@
      */
     clearTimeout(scanTimer);
     scanTimer = setTimeout(() => {
-      scanPage().catch((error) => console.warn("[BiliArm] scan failed", error));
+      scanPage().catch((error) => console.warn("[BilibiliToys] scan failed", error));
     }, OBSERVER_DEBOUNCE_MS);
   }
 
@@ -1498,12 +1738,14 @@
     injectPageAgentIfNeeded();
     bindDomObserver();
     bindRouteWatcher();
+    window.addEventListener("keydown", handleKeydown, true);
     document.addEventListener("keydown", handleKeydown, true);
     scheduleScan();
 
     CONFIG.onConfigChanged((nextConfig) => {
       config = nextConfig;
-      clearBiliArmMarks();
+      clearBilibiliToysMarks();
+      appliedDanmakuOffKey = "";
       appliedViewModeKey = "";
       smartLightTarget = null;
       homeInitialScanDone = false;
@@ -1513,5 +1755,5 @@
     });
   }
 
-  start().catch((error) => console.warn("[BiliArm] start failed", error));
+  start().catch((error) => console.warn("[BilibiliToys] start failed", error));
 })();

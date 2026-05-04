@@ -1,21 +1,21 @@
 /*
- * BiliArm 弹窗脚本。
+ * BilibiliToys 弹窗脚本。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  */
 
 (function () {
   "use strict";
 
-  const CONFIG = globalThis.BiliArmConfig;
+  const CONFIG = globalThis.BilibiliToysConfig;
 
   /*
    * 弹窗状态生命周期很短。每次打开弹窗都会读取存储、
    * 渲染四个快捷控件，并在弹窗关闭后销毁。
    */
   let config = CONFIG.normalizeConfig();
-  let theme = localStorage.getItem("biliarm-theme") || "light";
+  let theme = localStorage.getItem("bilibili-toys-theme") || "light";
 
   async function save(nextConfig) {
     /*
@@ -62,7 +62,7 @@
     document.getElementById("toggleEnabled").addEventListener("click", () => toggle("enabled"));
     document.getElementById("themeToggle").addEventListener("click", () => {
       theme = theme === "dark" ? "light" : "dark";
-      localStorage.setItem("biliarm-theme", theme);
+      localStorage.setItem("bilibili-toys-theme", theme);
       render();
     });
     document.getElementById("toggleClean").addEventListener("click", () => toggle("modules.homeClean"));
@@ -72,6 +72,6 @@
   }
 
   start().catch((error) => {
-    document.body.textContent = `BiliArm 弹窗加载失败：${error.message}`;
+    document.body.textContent = `BilibiliToys 弹窗加载失败：${error.message}`;
   });
 })();

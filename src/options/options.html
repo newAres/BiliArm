@@ -1,15 +1,15 @@
 <!doctype html>
 <!--
-  BiliArm 完整设置页。
+  BilibiliToys 完整设置页。
 
   SPDX-License-Identifier: MIT
-  版权所有 (c) 2026 BiliArm 贡献者
+  版权所有 (c) 2026 BilibiliToys 贡献者
 -->
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BiliArm 设置</title>
+    <title>BilibiliToys 设置</title>
     <link rel="stylesheet" href="options.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       <!-- 分类导航和主题切换。导航按钮由 options.js 渲染。 -->
       <aside class="sidebar" aria-label="设置分类">
         <div class="brand-row">
-          <div class="brand">BiliArm</div>
+          <div class="brand">BilibiliToys</div>
           <button id="themeToggle" class="theme-icon-button" type="button" aria-label="切换深浅色主题" title="切换深浅色主题">☾</button>
         </div>
         <nav id="navList" class="nav-list"></nav>
@@ -39,6 +39,14 @@
 
         <div id="sectionBody" class="section-body"></div>
       </section>
+
+      <!-- 右侧固定搜索栏。候选项由 options.js 根据功能标题和说明动态匹配。 -->
+      <aside class="search-panel" aria-label="功能搜索">
+        <label class="search-label" for="featureSearch">搜索功能</label>
+        <input id="featureSearch" class="feature-search" type="search" autocomplete="off" placeholder="输入功能名称">
+        <div id="searchSuggestions" class="search-suggestions" hidden></div>
+        <div id="secretControls" class="secret-controls" hidden></div>
+      </aside>
     </main>
 
     <!-- 快捷键编辑器。弹窗打开时由 options.js 捕获 keydown。 -->

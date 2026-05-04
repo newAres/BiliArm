@@ -1,15 +1,15 @@
 /*
- * BiliArm 共享配置辅助模块。
+ * BilibiliToys 共享配置辅助模块。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 部分默认值参考了以下扩展的行为：
  * - Better Bilibili 2026.02.13
  * - Bilibili Player Extension 3.0.2，作者 Guokai Han
  *
  * 原 CRX 脚本经过压缩。本文件将配置层重写为带文档、带注释、
- * 可维护并遵循 MIT 许可证的 BiliArm 代码。
+ * 可维护并遵循 MIT 许可证的 BilibiliToys 代码。
  */
 
 (function (global) {
@@ -55,7 +55,8 @@
     titleOverlay: { group: "信息显示", label: "显示视频标题", code: "KeyB", ctrl: false, alt: false, shift: false, enabled: true },
     progressOverlay: { group: "信息显示", label: "显示播放进度", code: "KeyG", ctrl: false, alt: false, shift: false, enabled: true },
     clockOverlay: { group: "信息显示", label: "显示当前时间", code: "KeyH", ctrl: false, alt: false, shift: false, enabled: true },
-    lightsToggle: { group: "全屏 / 显示", label: "关灯 / 开灯", code: "KeyI", ctrl: false, alt: false, shift: false, enabled: true }
+    lightsToggle: { group: "全屏 / 显示", label: "关灯 / 开灯", code: "KeyI", ctrl: false, alt: false, shift: false, enabled: true },
+    shortcutHelp: { group: "信息显示", label: "显示快捷键帮助", code: "Slash", ctrl: false, alt: true, shift: false, enabled: true }
   };
 
   /*
@@ -81,6 +82,10 @@
   const DEFAULT_CONFIG = {
     version: CONFIG_VERSION,
     enabled: true,
+    ui: {
+      mode: "basic",
+      showDanger: false
+    },
     modules: {
       homeClean: true,
       blacklist: true,
@@ -268,6 +273,10 @@
       normalized.player.defaultViewMode = "normal";
     }
 
+    if (!["basic", "pro"].includes(normalized.ui.mode)) {
+      normalized.ui.mode = "basic";
+    }
+
     if (!["jpg", "png"].includes(normalized.media.screenshotFormat)) {
       normalized.media.screenshotFormat = "jpg";
     }
@@ -386,10 +395,10 @@
   }
 
   /*
-   * 暴露一个共享命名空间。所有 BiliArm 页面都会先加载本文件，
+   * 暴露一个共享命名空间。所有 BilibiliToys 页面都会先加载本文件，
    * 显式列出公共 API 可避免意外产生全局变量。
    */
-  global.BiliArmConfig = {
+  global.BilibiliToysConfig = {
     STORAGE_KEY,
     CONFIG_VERSION,
     DEFAULT_CONFIG,

@@ -1,10 +1,10 @@
 /*
- * BiliArm 后台 Service Worker。
+ * BilibiliToys 后台 Service Worker。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
- * 本文件是 BiliArm 的后台衔接代码。功能集合来自 BiliArm 项目目标，
+ * 本文件是 BilibiliToys 的后台衔接代码。功能集合来自 BilibiliToys 项目目标，
  * 并参考了 Better Bilibili 2026.02.13 与 Bilibili Player Extension
  * 3.0.2 的静态分析结果。
  */
@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  const DB_NAME = "BiliArmDB";
+  const DB_NAME = "BilibiliToysDB";
   const DB_VERSION = 1;
   const STORE_BLOCKED_USERS = "blockedUsers";
 
@@ -190,7 +190,7 @@
         case "blacklist:import":
           return importBlockedUsers(message.users);
         default:
-          throw new Error(`Unknown BiliArm message: ${message.type}`);
+          throw new Error(`Unknown BilibiliToys message: ${message.type}`);
       }
     };
 

@@ -1,19 +1,19 @@
 /*
- * BiliArm 页面代理脚本。
+ * BilibiliToys 页面代理脚本。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 本文件运行在网页 MAIN world 中。它会 patch fetch、XMLHttpRequest、
  * sendBeacon 和 WebSocket 等页面 API，因此刻意与普通内容脚本逻辑隔离。
  * 实现思路参考了 Better Bilibili 2026.02.13 的 main-world 脚本，
- * 并为 BiliArm 重写为显式开关和带注释的结构。
+ * 并为 BilibiliToys 重写为显式开关和带注释的结构。
  */
 
 (function () {
   "use strict";
 
-  const CONFIG_EVENT = "BiliArmPageConfig";
+  const CONFIG_EVENT = "BilibiliToysPageConfig";
   const ORIGINALS = {};
 
   /*
@@ -90,7 +90,7 @@
 
   function shouldBlockTrackingRequest(url, transport) {
     /*
-     * Better Bilibili 原实现是按日志 URL 拦截。BiliArm 在此基础上补充分场景开关：
+     * Better Bilibili 原实现是按日志 URL 拦截。BilibiliToys 在此基础上补充分场景开关：
      * 首页日志和播放器日志只在对应页面生效，避免影响其他页面的必要请求。
      */
     if (!moduleOn("tracking") || !isTrackingLogUrl(url) || isAllowedFeedbackUrl(url)) {
@@ -361,7 +361,7 @@
         }
       });
     } catch (error) {
-      console.warn("[BiliArm] failed to install __playinfo__ hook", error);
+      console.warn("[BilibiliToys] failed to install __playinfo__ hook", error);
     }
   }
 
@@ -383,7 +383,7 @@
        * 提前 reject 已知首页模块请求，避免 B 站一开始就渲染轮播 / 直播 / 广告楼层数据。
        */
       if (moduleOn("homeClean") && isBlockedHomeModuleUrl(url)) {
-        return Promise.reject(new Error("BiliArm blocked homepage module request"));
+        return Promise.reject(new Error("BilibiliToys blocked homepage module request"));
       }
 
       if (shouldBlockTrackingRequest(url, "fetch")) {
@@ -463,15 +463,15 @@
        * 将 URL 存在 XHR 实例上，让 send / load 处理器可以判断目标，
        * 同时不改变公开的 XHR API 表面。
        */
-      this.__biliarmUrl = String(url || "");
+      this.__bilibiliToysUrl = String(url || "");
 
       if (moduleOn("cdn") && typeof nextUrl === "string" && shouldAvoidCdnUrl(nextUrl)) {
         nextUrl = findCdnReplacement(nextUrl);
-        this.__biliarmUrl = nextUrl;
+        this.__bilibiliToysUrl = nextUrl;
       }
 
       this.addEventListener("load", function onLoad() {
-        const responseUrl = this.responseURL || this.__biliarmUrl || "";
+        const responseUrl = this.responseURL || this.__bilibiliToysUrl || "";
         const isPlayUrl = [
           "https://api.bilibili.com/x/player/wbi/playurl",
           "https://api.bilibili.com/pgc/player/web/v2/playurl",
@@ -489,7 +489,7 @@
             value: JSON.stringify(parsed)
           });
         } catch (error) {
-          /* 响应可能不是 JSON，这种情况下 BiliArm 会保持原样。 */
+          /* 响应可能不是 JSON，这种情况下 BilibiliToys 会保持原样。 */
         }
       });
 
@@ -500,7 +500,7 @@
       /*
        * 日志 XHR 会在 send 阶段中止，因为此时 open() 已经记录了目标 URL。
        */
-      if (shouldBlockTrackingRequest(this.__biliarmUrl, "xhr")) {
+      if (shouldBlockTrackingRequest(this.__bilibiliToysUrl, "xhr")) {
         try {
           this.abort();
         } catch (error) {
@@ -590,7 +590,7 @@
   function installCustomElementPatch() {
     /*
      * 评论渲染在带 shadow DOM 的 web component 内。
-     * 包装 customElements.define 后，BiliArm 可在组件连接后添加小段样式，
+     * 包装 customElements.define 后，BilibiliToys 可在组件连接后添加小段样式，
      * 无需修改 B 站组件源码。
      */
     if (ORIGINALS.customElementsDefine) {
@@ -632,14 +632,14 @@
               super.connectedCallback();
             }
 
-            appendShadowStyle(this, "biliarm-comment-area-style", `
-              .bili-comments-bottom-fixed-wrapper{margin-bottom:var(--biliarm-comment-fixed-margin);}
+            appendShadowStyle(this, "bilibili-toys-comment-area-style", `
+              .bili-comments-bottom-fixed-wrapper{margin-bottom:var(--bilibili-toys-comment-fixed-margin);}
               .bili-comments-bottom-fixed-wrapper>div{
-                background-color:var(--biliarm-comment-fixed-bg)!important;
-                border-radius:var(--biliarm-comment-fixed-radius);
-                border:var(--biliarm-comment-fixed-border)!important;
-                box-shadow:var(--biliarm-comment-fixed-shadow);
-                padding:var(--biliarm-comment-fixed-padding)!important;
+                background-color:var(--bilibili-toys-comment-fixed-bg)!important;
+                border-radius:var(--bilibili-toys-comment-fixed-radius);
+                border:var(--bilibili-toys-comment-fixed-border)!important;
+                box-shadow:var(--bilibili-toys-comment-fixed-shadow);
+                padding:var(--bilibili-toys-comment-fixed-padding)!important;
               }
             `);
           }
@@ -655,14 +655,14 @@
               super.connectedCallback();
             }
 
-            appendShadowStyle(this, "biliarm-comment-box-style", `
-              #comment-area{margin-right:var(--biliarm-comment-box-margin);}
+            appendShadowStyle(this, "bilibili-toys-comment-box-style", `
+              #comment-area{margin-right:var(--bilibili-toys-comment-box-margin);}
               #editor{
-                background-color:var(--biliarm-comment-editor-bg);
-                border:var(--biliarm-comment-editor-border);
-                border-radius:var(--biliarm-comment-editor-radius);
+                background-color:var(--bilibili-toys-comment-editor-bg);
+                border:var(--bilibili-toys-comment-editor-border);
+                border-radius:var(--bilibili-toys-comment-editor-radius);
               }
-              button.tool-btn{border-radius:var(--biliarm-comment-tool-radius);}
+              button.tool-btn{border-radius:var(--bilibili-toys-comment-tool-radius);}
             `);
           }
         };

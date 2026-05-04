@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "BiliArm",
+  "name": "BilibiliToys",
   "version": "0.0.1",
   "description": "整合 B 站推荐净化、黑名单、播放器快捷键、截图、反追踪和页面样式优化的浏览器扩展。",
   "permissions": [
@@ -15,7 +15,7 @@
     "service_worker": "src/background.js"
   },
   "action": {
-    "default_title": "BiliArm",
+    "default_title": "BilibiliToys",
     "default_popup": "src/popup/popup.html",
     "default_icon": {
       "16": "assets/logo_example.png",

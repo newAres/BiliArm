@@ -1,8 +1,8 @@
 /*
- * BiliArm 完整设置页样式。
+ * BilibiliToys 完整设置页样式。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 设置页布局遵循用户提供的 UI 样例：
  * 安静的左侧导航、右对齐控制列、浅蓝色启用开关，
@@ -27,7 +27,8 @@
   --button: #4d9fcb;
   --danger: #dc2626;
   --sidebar-width: 260px;
-  --content-width: 1040px;
+  --content-width: 860px;
+  --search-width: 260px;
   scrollbar-gutter: stable;
 }
 
@@ -71,11 +72,11 @@ body {
    * 与提供的参考图一致。
    */
   display: grid;
-  grid-template-columns: var(--sidebar-width) var(--content-width);
+  grid-template-columns: var(--sidebar-width) var(--content-width) var(--search-width);
   margin: 0 auto;
-  max-width: calc(var(--sidebar-width) + var(--content-width));
+  max-width: calc(var(--sidebar-width) + var(--content-width) + var(--search-width));
   min-height: 100vh;
-  width: calc(var(--sidebar-width) + var(--content-width));
+  width: calc(var(--sidebar-width) + var(--content-width) + var(--search-width));
 }
 
 .sidebar {
@@ -155,6 +156,103 @@ body {
 .content {
   padding: 36px 72px 72px;
   width: var(--content-width);
+}
+
+.search-panel {
+  /*
+   * 右侧搜索栏固定在视口内，和左侧导航一样不跟随内容滚动。
+   */
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+  height: 100vh;
+  padding: 36px 28px;
+  position: sticky;
+  top: 0;
+  width: var(--search-width);
+}
+
+.search-label {
+  color: var(--text);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.feature-search {
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--field));
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  height: 40px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.feature-search:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+  outline: none;
+}
+
+.search-suggestions {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgb(48 71 91 / 12%);
+  margin-top: 8px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.search-suggestion {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  padding: 10px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.search-suggestion:hover {
+  background: var(--soft);
+  color: var(--accent-dark);
+}
+
+.search-suggestion small {
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.secret-controls {
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.secret-controls[hidden],
+.search-suggestions[hidden] {
+  display: none;
+}
+
+.secret-setting {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.secret-setting-title {
+  color: var(--text);
+  font-weight: 500;
 }
 
 .content-header {

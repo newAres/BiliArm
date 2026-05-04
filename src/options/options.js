@@ -1,8 +1,8 @@
 /*
- * BiliArm 完整设置页。
+ * BilibiliToys 完整设置页。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 本文件根据声明式元数据渲染全部设置，确保每个功能都有可见开关。
  * 快捷键编辑器参考原 Bilibili Player Extension 快捷键页重写，
@@ -12,13 +12,14 @@
 (function () {
   "use strict";
 
-  const CONFIG = globalThis.BiliArmConfig;
+  const CONFIG = globalThis.BilibiliToysConfig;
 
   let config = CONFIG.normalizeConfig();
   let activeSection = "basic";
   let editingShortcutId = "";
   let pendingShortcut = null;
-  let theme = localStorage.getItem("biliarm-theme") || "light";
+  let theme = localStorage.getItem("bilibili-toys-theme") || "light";
+  let secretUnlocked = false;
 
   /*
    * 左侧导航元数据。渲染器同时用它生成导航按钮和章节标题，
@@ -44,16 +45,52 @@
    * 声明式设置结构。每个条目都会渲染成一行 UI，
    * 新增开关时不需要再写专门的渲染函数。
    */
+  function isProMode() {
+    /*
+     * 设置页分为 Basic 和 Pro。Basic 是默认模式，隐藏网络改写类高级模块。
+     */
+    return config.ui && config.ui.mode === "pro";
+  }
+
+  function showDangerSettings() {
+    /*
+     * 危险功能默认隐藏，只有通过搜索框暗码解锁后才显示。
+     */
+    return Boolean(config.ui && config.ui.showDanger);
+  }
+
+  function isSectionVisible(section) {
+    /*
+     * 反追踪和 CDN 优化属于 Pro 模式模块，Basic 模式不显示入口。
+     */
+    return isProMode() || !["tracking", "cdn"].includes(section.id);
+  }
+
+  function isSettingVisible(item) {
+    /*
+     * 设置项渲染前统一判断模式和危险功能可见性，搜索候选也复用同一规则。
+     */
+    if (item.pro && !isProMode()) {
+      return false;
+    }
+
+    if (item.danger && !showDangerSettings()) {
+      return false;
+    }
+
+    return true;
+  }
+
   const settingGroups = {
     basic: [
-      switchSetting("enabled", "启用 BiliArm", "关闭后所有模块都停止执行。"),
+      switchSetting("enabled", "启用 BilibiliToys", "关闭后所有模块都停止执行。"),
       switchSetting("modules.homeClean", "首页净化模块", "控制首页推荐流过滤。"),
       switchSetting("modules.blacklist", "黑名单模块", "控制本地黑名单、拉黑按钮和账号拉黑。"),
       switchSetting("modules.playRecommend", "播放页推荐屏蔽模块", "根据黑名单隐藏播放页右侧推荐。"),
       switchSetting("modules.hotkeys", "快捷键模块", "控制全部扩展快捷键。"),
       switchSetting("modules.playerDefaults", "播放器默认状态模块", "控制默认弹幕、显示模式、自动播放等。"),
-      switchSetting("modules.tracking", "反追踪模块", "高风险功能，默认关闭。"),
-      switchSetting("modules.cdn", "CDN 优化模块", "高风险功能，默认关闭。")
+      switchSetting("modules.tracking", "反追踪模块", "Pro 模式功能，控制日志、埋点和网络拦截。", false, { pro: true }),
+      switchSetting("modules.cdn", "CDN 优化模块", "Pro 模式功能，控制播放 CDN 地址优化。", false, { pro: true })
     ],
     home: [
       switchSetting("homeClean.filterAds", "过滤广告内容", "隐藏带广告标识或广告类名的推荐卡片。"),
@@ -81,7 +118,7 @@
       switchSetting("player.defaultDanmakuOff", "默认关闭弹幕", "进入播放页后自动关闭弹幕。"),
       switchSetting("player.defaultViewModeEnabled", "启用默认显示模式", "自动切换正常、宽屏或网页全屏。"),
       selectSetting("player.defaultViewMode", "默认显示模式", "宽屏禁用后，宽屏选项不会自动执行。", [["normal", "正常"], ["wide", "宽屏"], ["webFullscreen", "网页全屏"]]),
-      switchSetting("player.disableWideMode", "禁用宽屏模式", "关闭自动宽屏，并让宽屏快捷键不执行。"),
+      switchSetting("player.disableWideMode", "禁用宽屏模式", "关闭自动宽屏，并让宽屏快捷键不执行。", true),
       switchSetting("player.autoPlay", "自动播放", "进入播放页后尝试自动播放。"),
       switchSetting("player.exitFullscreenOnEnded", "播放结束自动退出全屏", "视频结束时退出全屏或网页全屏。"),
       switchSetting("player.defaultLightsOff", "默认关灯", "进入播放页后自动开启关灯。"),
@@ -144,12 +181,12 @@
     ]
   };
 
-  function switchSetting(path, title, desc, danger) {
+  function switchSetting(path, title, desc, danger, meta) {
     /*
      * switch 设置直接映射到布尔配置路径，
      * 并渲染为参考 UI 样例中的右对齐开关样式。
      */
-    return { type: "switch", path, title, desc, danger: Boolean(danger) };
+    return { type: "switch", path, title, desc, danger: Boolean(danger), ...(meta || {}) };
   }
 
   function selectSetting(path, title, desc, options) {
@@ -183,11 +220,13 @@
       return "未设置";
     }
 
+    const keyText = shortcut.code === "Slash" ? "/" : shortcut.code.replace(/^Key/, "").replace(/^Digit/, "");
+
     return [
       shortcut.ctrl ? "Ctrl" : "",
       shortcut.alt ? "Alt" : "",
       shortcut.shift ? "Shift" : "",
-      shortcut.code.replace(/^Key/, "").replace(/^Digit/, "")
+      keyText
     ].filter(Boolean).join(" + ");
   }
 
@@ -265,7 +304,7 @@
     const nav = document.getElementById("navList");
     nav.textContent = "";
 
-    sections.forEach((section) => {
+    sections.filter(isSectionVisible).forEach((section) => {
       const button = create("button", `nav-button ${section.id === activeSection ? "active" : ""}`, section.label);
       button.type = "button";
       button.addEventListener("click", () => {
@@ -342,7 +381,7 @@
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
-    (settingGroups[sectionId] || []).forEach((item) => {
+    (settingGroups[sectionId] || []).filter(isSettingVisible).forEach((item) => {
       body.appendChild(renderSetting(item));
     });
   }
@@ -350,7 +389,7 @@
   function renderShortcutsSection() {
     /*
      * 快捷键章节需要自定义渲染，因为它包含两张表：
-     * 只读的 B 站默认快捷键，以及可编辑的 BiliArm 功能快捷键。
+     * 只读的 B 站默认快捷键，以及可编辑的 BilibiliToys 功能快捷键。
      */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
@@ -443,12 +482,170 @@
     return td;
   }
 
+  function visibleSections() {
+    /*
+     * 所有右侧搜索和左侧导航都使用同一份可见章节列表。
+     */
+    return sections.filter(isSectionVisible);
+  }
+
+  function buildSearchIndex() {
+    /*
+     * 搜索索引来自现有功能元数据，匹配规则是 include，不做额外分词。
+     */
+    const rows = [];
+
+    visibleSections().forEach((section) => {
+      if (settingGroups[section.id]) {
+        settingGroups[section.id].filter(isSettingVisible).forEach((item) => {
+          if (item.path && item.title) {
+            rows.push({
+              sectionId: section.id,
+              sectionLabel: section.label,
+              title: item.title,
+              desc: item.desc || "",
+              path: item.path
+            });
+          }
+        });
+      } else if (section.id === "shortcuts") {
+        Object.values(config.hotkeys.shortcuts || {}).forEach((shortcut) => {
+          rows.push({
+            sectionId: section.id,
+            sectionLabel: section.label,
+            title: shortcut.label,
+            desc: `${shortcut.group} · ${shortcutText(shortcut)}`,
+            path: "hotkeys.shortcuts"
+          });
+        });
+      } else {
+        rows.push({
+          sectionId: section.id,
+          sectionLabel: section.label,
+          title: section.label,
+          desc: section.description,
+          path: section.id
+        });
+      }
+    });
+
+    return rows;
+  }
+
+  function getSearchMatches() {
+    /*
+     * 搜索框为空时不展示候选；输入文本后按标题、说明、路径和章节 include 匹配。
+     */
+    const input = document.getElementById("featureSearch");
+    const query = input.value.trim().toLowerCase();
+
+    if (!query || query === "0110") {
+      return [];
+    }
+
+    return buildSearchIndex().filter((item) => {
+      return [item.title, item.desc, item.path, item.sectionLabel].some((text) => String(text).toLowerCase().includes(query));
+    }).slice(0, 12);
+  }
+
+  function goToSearchItem(item) {
+    /*
+     * 点击候选或回车后跳转到对应功能所在章节。
+     */
+    activeSection = item.sectionId;
+    document.getElementById("featureSearch").value = "";
+    render();
+  }
+
+  function renderSearchSuggestions() {
+    const box = document.getElementById("searchSuggestions");
+    const matches = getSearchMatches();
+
+    box.textContent = "";
+    box.hidden = matches.length === 0;
+
+    matches.forEach((item) => {
+      const button = create("button", "search-suggestion");
+      const title = document.createElement("span");
+      const meta = document.createElement("small");
+
+      button.type = "button";
+      title.textContent = item.title;
+      meta.textContent = `${item.sectionLabel} · ${item.desc}`;
+      button.append(title, meta);
+      button.addEventListener("click", () => goToSearchItem(item));
+      box.appendChild(button);
+    });
+  }
+
+  function renderSecretControls() {
+    /*
+     * 输入 0110 后显示的高级 UI 控制，不放进左侧导航，避免默认界面暴露危险功能。
+     */
+    const panel = document.getElementById("secretControls");
+    panel.textContent = "";
+    panel.hidden = !secretUnlocked;
+
+    if (!secretUnlocked) {
+      return;
+    }
+
+    [
+      ["ui.showDanger", "危险功能"],
+      ["ui.mode", "Mode"]
+    ].forEach(([path, title]) => {
+      const row = create("div", "secret-setting");
+      const label = create("div", "secret-setting-title", path === "ui.mode" ? `${title}: ${isProMode() ? "Pro" : "Basic"}` : title);
+      const control = create("label", "switch");
+      const input = document.createElement("input");
+      const knob = document.createElement("span");
+
+      input.type = "checkbox";
+      input.checked = path === "ui.mode" ? isProMode() : showDangerSettings();
+      input.addEventListener("change", () => {
+        const value = path === "ui.mode" ? (input.checked ? "pro" : "basic") : input.checked;
+        setValue(path, value);
+      });
+      control.append(input, knob);
+      row.append(label, control);
+      panel.appendChild(row);
+    });
+  }
+
+  function bindSearchPanel() {
+    /*
+     * 搜索框支持候选点击、回车跳转第一个候选，以及 0110 暗码显示高级 UI 控制。
+     */
+    const input = document.getElementById("featureSearch");
+
+    input.addEventListener("input", renderSearchSuggestions);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (input.value.trim() === "0110") {
+        secretUnlocked = true;
+        input.value = "";
+        render();
+        return;
+      }
+
+      const first = getSearchMatches()[0];
+      if (first) {
+        goToSearchItem(first);
+      }
+    });
+  }
+
   async function exportBlacklist() {
     /*
      * 黑名单数据存放在后台 IndexedDB 中，因此导出时通过后台消息 API 获取。
      */
     const response = await sendMessage({ type: "blacklist:list" });
-    downloadJson(response, `biliarm-blacklist-${dateStamp()}.json`);
+    downloadJson(response, `bilibili-toys-blacklist-${dateStamp()}.json`);
   }
 
   async function importBlacklist(file) {
@@ -572,7 +769,7 @@
     settingsFile.hidden = true;
     exportSettings.type = "button";
     importSettingsButton.type = "button";
-    exportSettings.addEventListener("click", () => downloadJson(config, `biliarm-settings-${dateStamp()}.json`));
+    exportSettings.addEventListener("click", () => downloadJson(config, `bilibili-toys-settings-${dateStamp()}.json`));
     importSettingsButton.addEventListener("click", () => settingsFile.click());
     settingsFile.addEventListener("change", () => settingsFile.files[0] && importSettings(settingsFile.files[0]));
     settingsButtons.append(exportSettings, importSettingsButton, settingsFile);
@@ -587,7 +784,7 @@
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
-    body.appendChild(create("div", "notice", "BiliArm 使用 MIT 许可证发布。部分功能行为参考 Better Bilibili 2026.02.13 与 Bilibili Player Extension 3.0.2，并已在源码文件头标注。"));
+    body.appendChild(create("div", "notice", "BilibiliToys 使用 MIT 许可证发布。部分功能行为参考 Better Bilibili 2026.02.13 与 Bilibili Player Extension 3.0.2，并已在源码文件头标注。"));
 
     const resetRow = create("div", "setting-row");
     const text = create("div");
@@ -625,7 +822,7 @@
 
   function bindShortcutDialog() {
     /*
-     * 弹窗直接捕获 keydown。preventDefault 可避免用户录入 BiliArm 快捷键时
+     * 弹窗直接捕获 keydown。preventDefault 可避免用户录入 BilibiliToys 快捷键时
      * 触发浏览器自身快捷键。
      */
     const dialog = document.getElementById("shortcutDialog");
@@ -671,7 +868,11 @@
      * 顶层渲染会选择当前章节并委托给对应章节渲染器，
      * 同时应用主题和全局开关状态。
      */
-    const section = sections.find((item) => item.id === activeSection) || sections[0];
+    if (!visibleSections().some((item) => item.id === activeSection)) {
+      activeSection = "basic";
+    }
+
+    const section = visibleSections().find((item) => item.id === activeSection) || visibleSections()[0];
 
     document.getElementById("sectionTitle").textContent = section.label;
     document.getElementById("sectionDescription").textContent = section.description;
@@ -680,6 +881,8 @@
     document.getElementById("themeToggle").textContent = theme === "dark" ? "☀" : "☾";
 
     renderNav();
+    renderSecretControls();
+    renderSearchSuggestions();
 
     if (activeSection === "shortcuts") {
       renderShortcutsSection();
@@ -701,14 +904,15 @@
     document.getElementById("globalEnabled").addEventListener("change", (event) => setValue("enabled", event.target.checked));
     document.getElementById("themeToggle").addEventListener("click", () => {
       theme = theme === "dark" ? "light" : "dark";
-      localStorage.setItem("biliarm-theme", theme);
+      localStorage.setItem("bilibili-toys-theme", theme);
       render();
     });
     bindShortcutDialog();
+    bindSearchPanel();
     render();
   }
 
   start().catch((error) => {
-    document.body.textContent = `BiliArm 设置页加载失败：${error.message}`;
+    document.body.textContent = `BilibiliToys 设置页加载失败：${error.message}`;
   });
 })();

@@ -1,14 +1,14 @@
 /*
- * BiliArm 内容脚本样式。
+ * BilibiliToys 内容脚本样式。
  *
  * SPDX-License-Identifier: MIT
- * 版权所有 (c) 2026 BiliArm 贡献者
+ * 版权所有 (c) 2026 BilibiliToys 贡献者
  *
  * 视觉行为参考了审阅过的 CRX 扩展，
- * CSS 选择器和注释已为 BiliArm 重新编写。
+ * CSS 选择器和注释已为 BilibiliToys 重新编写。
  */
 
-.biliarm-hidden {
+.bilibili-toys-hidden {
   /*
    * 通用隐藏工具类，用于功能需要立即强制隐藏元素的场景。
    */
@@ -17,25 +17,25 @@
 
 /*
  * Better Bilibili 会在 document_start 阶段用 CSS 隐藏首页轮播和非视频楼层卡片。
- * BiliArm 保留相同的提前隐藏行为，避免 JavaScript 扫描推荐流前出现可见闪烁。
- * 如果用户关闭首页净化，content.js 会给 <html> 添加 .biliarm-home-clean-off，
+ * BilibiliToys 保留相同的提前隐藏行为，避免 JavaScript 扫描推荐流前出现可见闪烁。
+ * 如果用户关闭首页净化，content.js 会给 <html> 添加 .bilibili-toys-home-clean-off，
  * 这些规则随即停止生效。
  */
-:root:not(.biliarm-home-clean-off) .container > .recommended-swipe,
-:root:not(.biliarm-home-clean-off) .is-version8 > .recommended-swipe,
-:root:not(.biliarm-home-clean-off) .bili-feed4 > .header-channel,
-:root:not(.biliarm-home-clean-off) .palette-button-outer.palette-feed4,
-:root:not(.biliarm-home-clean-off) body > .desktop-download-tip,
-:root:not(.biliarm-home-clean-off) body > div.adcard,
-:root:not(.biliarm-home-clean-off) .is-version8 > .bili-live-card,
-:root:not(.biliarm-home-clean-off) .container > .bili-live-card,
-:root:not(.biliarm-home-clean-off) .is-version8 > .floor-single-card,
-:root:not(.biliarm-home-clean-off) .container > .floor-single-card {
+:root:not(.bilibili-toys-home-clean-off) .container > .recommended-swipe,
+:root:not(.bilibili-toys-home-clean-off) .is-version8 > .recommended-swipe,
+:root:not(.bilibili-toys-home-clean-off) .bili-feed4 > .header-channel,
+:root:not(.bilibili-toys-home-clean-off) .palette-button-outer.palette-feed4,
+:root:not(.bilibili-toys-home-clean-off) body > .desktop-download-tip,
+:root:not(.bilibili-toys-home-clean-off) body > div.adcard,
+:root:not(.bilibili-toys-home-clean-off) .is-version8 > .bili-live-card,
+:root:not(.bilibili-toys-home-clean-off) .container > .bili-live-card,
+:root:not(.bilibili-toys-home-clean-off) .is-version8 > .floor-single-card,
+:root:not(.bilibili-toys-home-clean-off) .container > .floor-single-card {
   display: none !important;
 }
 
-:root:not(.biliarm-home-clean-off) .is-version8,
-:root:not(.biliarm-home-clean-off) .container {
+:root:not(.bilibili-toys-home-clean-off) .is-version8,
+:root:not(.bilibili-toys-home-clean-off) .container {
   /*
    * 请求级和 DOM 级过滤移除轮播 / 楼层 / 直播模块后，
    * 保持首页卡片网格紧凑。
@@ -44,16 +44,16 @@
   row-gap: 1.3rem !important;
 }
 
-:root:not(.biliarm-home-clean-off) .is-version8 > *,
-:root:not(.biliarm-home-clean-off) .container > * {
+:root:not(.bilibili-toys-home-clean-off) .is-version8 > *,
+:root:not(.bilibili-toys-home-clean-off) .container > * {
   /*
    * 重置网格直接子项的外边距，避免隐藏卡片后推荐流布局留下偏移。
    */
   margin: 0 !important;
 }
 
-:root:not(.biliarm-home-clean-off) .is-version8,
-:root:not(.biliarm-home-clean-off) .container {
+:root:not(.bilibili-toys-home-clean-off) .is-version8,
+:root:not(.bilibili-toys-home-clean-off) .container {
   /*
    * 默认三列，随后通过下面的媒体查询扩展列数。
    */
@@ -61,37 +61,37 @@
 }
 
 @media (min-width: 1140px) and (max-width: 1400px) {
-  :root:not(.biliarm-home-clean-off) .is-version8,
-  :root:not(.biliarm-home-clean-off) .container {
+  :root:not(.bilibili-toys-home-clean-off) .is-version8,
+  :root:not(.bilibili-toys-home-clean-off) .container {
     column-gap: 1.4rem !important;
     grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
 @media (min-width: 1400px) {
-  :root:not(.biliarm-home-clean-off) .is-version8,
-  :root:not(.biliarm-home-clean-off) .container {
+  :root:not(.bilibili-toys-home-clean-off) .is-version8,
+  :root:not(.bilibili-toys-home-clean-off) .container {
     column-gap: 1.3rem !important;
     grid-template-columns: repeat(5, 1fr) !important;
   }
 }
 
-:root:not(.biliarm-home-clean-off) .bili-feed4 > main > div.feed2 > div > div.container.is-version8 > div[block-reason],
-:root:not(.biliarm-home-clean-off) .feed2 > div > .container > div[block-reason],
-:root:not(.biliarm-home-clean-off) .container > [data-biliarm-card-hidden="true"],
-:root:not(.biliarm-home-clean-off) .is-version8 > [data-biliarm-card-hidden="true"] {
+:root:not(.bilibili-toys-home-clean-off) .bili-feed4 > main > div.feed2 > div > div.container.is-version8 > div[block-reason],
+:root:not(.bilibili-toys-home-clean-off) .feed2 > div > .container > div[block-reason],
+:root:not(.bilibili-toys-home-clean-off) .container > [data-bilibili-toys-card-hidden="true"],
+:root:not(.bilibili-toys-home-clean-off) .is-version8 > [data-bilibili-toys-card-hidden="true"] {
   display: none !important;
   order: 1;
 }
 
-.biliarm-card-hidden {
+.bilibili-toys-card-hidden {
   /*
    * 普通过滤模式：彻底移除卡片。
    */
   display: none !important;
 }
 
-.biliarm-card-debug {
+.bilibili-toys-card-debug {
   /*
    * 调试过滤模式：保留卡片可见，并绘制原因标记。
    */
@@ -99,11 +99,11 @@
   position: relative !important;
 }
 
-.biliarm-card-debug::after {
+.bilibili-toys-card-debug::after {
   background: #ec4899;
   border-radius: 4px;
   color: #fff;
-  content: attr(data-biliarm-reason);
+  content: attr(data-bilibili-toys-reason);
   font-size: 12px;
   left: 4px;
   line-height: 1.4;
@@ -114,7 +114,7 @@
   z-index: 2147483647;
 }
 
-.biliarm-block-actions {
+.bilibili-toys-block-actions {
   /*
    * 添加在受支持卡片作者信息旁边的内联按钮组。
    */
@@ -125,7 +125,7 @@
   vertical-align: middle;
 }
 
-.biliarm-mini-button {
+.bilibili-toys-mini-button {
   /*
    * 紧凑按钮需要融入 B 站卡片，同时尽量不改变卡片高度。
    */
@@ -139,13 +139,13 @@
   padding: 4px 6px;
 }
 
-.biliarm-mini-button:hover {
+.bilibili-toys-mini-button:hover {
   background: #ec4899;
   border-color: #ec4899;
   color: #fff;
 }
 
-.biliarm-overlay {
+.bilibili-toys-overlay {
   /*
    * 标题、进度、状态和时钟快捷键共用的浮层。
    * B 站播放器控件也会创建浮层，因此这里使用很高的 z-index。
@@ -163,18 +163,110 @@
   z-index: 2147483647;
 }
 
-.biliarm-overlay.is-center {
+.bilibili-toys-overlay.is-center {
   left: 50%;
   top: 24px;
   transform: translateX(-50%);
 }
 
-.biliarm-overlay.is-right {
+.bilibili-toys-overlay.is-right {
   left: auto;
   right: 16px;
 }
 
-.biliarm-video-scale-50 {
+.bilibili-toys-shortcut-help-backdrop {
+  /*
+   * Alt + / 快捷键帮助的遮罩层。点击遮罩关闭弹窗，弹窗本体阻止冒泡。
+   */
+  align-items: center;
+  background: rgba(12, 24, 38, 0.42);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 2147483647;
+}
+
+.bilibili-toys-shortcut-help-modal {
+  /*
+   * 帮助弹窗使用双列表布局：左侧为扩展快捷键，右侧为 B 站默认快捷键。
+   */
+  background: #f8fbff;
+  border: 1px solid rgba(126, 200, 242, 0.55);
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgba(12, 24, 38, 0.24);
+  color: #30475b;
+  font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-height: min(720px, calc(100vh - 48px));
+  max-width: min(920px, calc(100vw - 48px));
+  overflow: hidden;
+  width: 860px;
+}
+
+.bilibili-toys-shortcut-help-header {
+  align-items: center;
+  border-bottom: 1px solid rgba(126, 200, 242, 0.35);
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.bilibili-toys-shortcut-help-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bilibili-toys-shortcut-help-close {
+  background: transparent;
+  border: 0;
+  color: #2d95c7;
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 6px;
+}
+
+.bilibili-toys-shortcut-help-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  max-height: calc(100vh - 148px);
+  overflow: auto;
+  padding: 18px;
+}
+
+.bilibili-toys-shortcut-help-column h3 {
+  color: #2d95c7;
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+
+.bilibili-toys-shortcut-help-row {
+  align-items: center;
+  border-bottom: 1px solid rgba(126, 200, 242, 0.18);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px 0;
+}
+
+.bilibili-toys-shortcut-help-row kbd {
+  background: #eef7fd;
+  border: 1px solid rgba(126, 200, 242, 0.65);
+  border-radius: 4px;
+  color: #214963;
+  min-width: 58px;
+  padding: 3px 8px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .bilibili-toys-shortcut-help-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bilibili-toys-video-scale-50 {
   /*
    * 保留缩放工具类以兼容早期样式；
    * 当前 content.js 会直接把 transform 应用到 video 元素上。
@@ -183,12 +275,12 @@
   transform-origin: center center;
 }
 
-.biliarm-video-scale-75 {
+.bilibili-toys-video-scale-75 {
   transform: scale(0.75);
   transform-origin: center center;
 }
 
-.biliarm-video-scale-100 {
+.bilibili-toys-video-scale-100 {
   transform: scale(1);
   transform-origin: center center;
 }
