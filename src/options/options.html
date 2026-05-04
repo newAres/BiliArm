@@ -31,13 +31,17 @@
             <h1 id="sectionTitle">基本设置</h1>
             <p id="sectionDescription">所有功能都可以单独开启或关闭。</p>
           </div>
-          <label class="switch global-switch" title="扩展总开关">
-            <input id="globalEnabled" type="checkbox" data-config="enabled">
+          <label id="moduleSwitchWrap" class="switch global-switch" title="当前模块总开关">
+            <input id="moduleEnabled" type="checkbox">
             <span></span>
           </label>
         </header>
 
         <div id="sectionBody" class="section-body"></div>
+        <footer class="content-footer">
+          <span>© 2026 Armoen 软件</span>
+          <a href="https://github.com/newAres/BilibiliToys" target="_blank" rel="noreferrer">GitHub 项目地址</a>
+        </footer>
       </section>
 
       <!-- 右侧固定搜索栏。候选项由 options.js 根据功能标题和说明动态匹配。 -->

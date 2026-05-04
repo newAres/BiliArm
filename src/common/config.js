@@ -277,6 +277,20 @@
       normalized.ui.mode = "basic";
     }
 
+    /*
+     * 历史版本里快捷键和样式模块同时存在 modules.* 与模块内部 enabled。
+     * 设置页会把它们合并成同一个总开关；导入旧配置时，只要任意一侧为关，
+     * 就按关闭处理，避免升级后意外重新启用模块。
+     */
+    normalized.modules.hotkeys = Boolean(normalized.modules.hotkeys && normalized.hotkeys.enabled);
+    normalized.hotkeys.enabled = normalized.modules.hotkeys;
+    normalized.modules.styles = Boolean(normalized.modules.styles && normalized.styles.enabled);
+    normalized.styles.enabled = normalized.modules.styles;
+
+    if (!normalized.blacklist.accountBlockEnabled) {
+      normalized.blacklist.showAccountButton = false;
+    }
+
     if (!["jpg", "png"].includes(normalized.media.screenshotFormat)) {
       normalized.media.screenshotFormat = "jpg";
     }
@@ -354,6 +368,17 @@
     });
 
     cursor[parts[parts.length - 1]] = value;
+    if (path === "modules.hotkeys") {
+      output.hotkeys.enabled = value;
+    } else if (path === "hotkeys.enabled") {
+      output.modules.hotkeys = value;
+    } else if (path === "modules.styles") {
+      output.styles.enabled = value;
+    } else if (path === "styles.enabled") {
+      output.modules.styles = value;
+    } else if (path === "blacklist.accountBlockEnabled" && !value) {
+      output.blacklist.showAccountButton = false;
+    }
     return normalizeConfig(output);
   }
 

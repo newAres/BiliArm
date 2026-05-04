@@ -20,6 +20,26 @@
   let pendingShortcut = null;
   let theme = localStorage.getItem("bilibili-toys-theme") || "light";
   let secretUnlocked = false;
+  const PROJECT_URL = "https://github.com/newAres/BilibiliToys";
+  const CONTACT_EMAIL = "armoen596@gmail.com";
+  const MODULE_BY_SECTION = {
+    home: "homeClean",
+    blacklist: "blacklist",
+    player: "playerDefaults",
+    danmaku: "danmaku",
+    media: "media",
+    shortcuts: "hotkeys",
+    tracking: "tracking",
+    cdn: "cdn",
+    comments: "comments",
+    styles: "styles"
+  };
+  const MIRRORED_SWITCHES = {
+    "modules.hotkeys": "hotkeys.enabled",
+    "hotkeys.enabled": "modules.hotkeys",
+    "modules.styles": "styles.enabled",
+    "styles.enabled": "modules.styles"
+  };
 
   /*
    * 左侧导航元数据。渲染器同时用它生成导航按钮和章节标题，
@@ -38,7 +58,8 @@
     { id: "comments", label: "评论增强", description: "控制评论 IP 属地、话题标签和置顶广告评论。" },
     { id: "styles", label: "页面样式", description: "按页面控制样式优化和隐藏规则。" },
     { id: "data", label: "导入 / 导出", description: "导入导出黑名单和全部设置。" },
-    { id: "advanced", label: "高级设置", description: "重置配置和查看许可证说明。" }
+    { id: "about", label: "关于", description: "查看版本、联系邮箱、项目主页和许可证说明。" },
+    { id: "advanced", label: "高级设置", description: "恢复默认配置。" }
   ];
 
   /*
@@ -78,17 +99,24 @@
       return false;
     }
 
+    if (item.dependsOn && !Boolean(CONFIG.getByPath(config, item.dependsOn))) {
+      return false;
+    }
+
     return true;
   }
 
   const settingGroups = {
     basic: [
-      switchSetting("enabled", "启用 BilibiliToys", "关闭后所有模块都停止执行。"),
       switchSetting("modules.homeClean", "首页净化模块", "控制首页推荐流过滤。"),
       switchSetting("modules.blacklist", "黑名单模块", "控制本地黑名单、拉黑按钮和账号拉黑。"),
       switchSetting("modules.playRecommend", "播放页推荐屏蔽模块", "根据黑名单隐藏播放页右侧推荐。"),
       switchSetting("modules.hotkeys", "快捷键模块", "控制全部扩展快捷键。"),
       switchSetting("modules.playerDefaults", "播放器默认状态模块", "控制默认弹幕、显示模式、自动播放等。"),
+      switchSetting("modules.danmaku", "弹幕 / 字幕模块", "控制弹幕、字幕、信息浮层和画面缩放。"),
+      switchSetting("modules.media", "截图 / 媒体模块", "控制截图、画中画、逐帧、倍速等媒体增强功能。"),
+      switchSetting("modules.comments", "评论增强模块", "控制评论 IP 属地、话题标签和置顶广告评论。"),
+      switchSetting("modules.styles", "页面样式模块", "控制各页面样式优化和隐藏规则。"),
       switchSetting("modules.tracking", "反追踪模块", "Pro 模式功能，控制日志、埋点和网络拦截。", false, { pro: true }),
       switchSetting("modules.cdn", "CDN 优化模块", "Pro 模式功能，控制播放 CDN 地址优化。", false, { pro: true })
     ],
@@ -107,9 +135,9 @@
     blacklist: [
       switchSetting("blacklist.localEnabled", "启用本地黑名单", "黑名单保存在扩展 IndexedDB 中。"),
       switchSetting("blacklist.showLocalButton", "显示拉黑本地按钮", "在卡片上添加本地拉黑按钮。"),
-      switchSetting("blacklist.showAccountButton", "显示账号拉黑按钮", "仅在账号拉黑启用时显示。"),
-      switchSetting("blacklist.accountBlockEnabled", "启用账号拉黑", "会调用 B 站账号接口，属于高风险功能。", true),
-      switchSetting("blacklist.accountBlockConfirm", "账号拉黑二次确认", "执行账号拉黑前弹窗确认。"),
+      switchSetting("blacklist.accountBlockEnabled", "启用账号拉黑按钮", "会调用 B 站账号接口，属于高风险功能。", true),
+      switchSetting("blacklist.showAccountButton", "显示账号拉黑按钮", "仅在账号拉黑按钮启用后显示。", true, { dependsOn: "blacklist.accountBlockEnabled" }),
+      switchSetting("blacklist.accountBlockConfirm", "账号拉黑二次确认", "执行账号拉黑前弹窗确认。", true, { dependsOn: "blacklist.accountBlockEnabled" }),
       switchSetting("blacklist.preferLocalBlock", "默认使用本地拉黑", "优先将用户加入本地黑名单。"),
       switchSetting("blacklist.importEnabled", "启用黑名单导入", "允许从 JSON 文件导入。"),
       switchSetting("blacklist.exportEnabled", "启用黑名单导出", "允许导出 JSON 文件。")
@@ -268,6 +296,24 @@
     return node;
   }
 
+  function assignPath(target, path, value) {
+    /*
+     * setValue 需要一次性修改多个互相关联的路径。
+     * 这里先在同一个配置副本上写入所有路径，再交给共享配置统一规范化。
+     */
+    const parts = path.split(".");
+    let cursor = target;
+
+    parts.slice(0, -1).forEach((part) => {
+      if (!cursor[part] || typeof cursor[part] !== "object") {
+        cursor[part] = {};
+      }
+      cursor = cursor[part];
+    });
+
+    cursor[parts[parts.length - 1]] = value;
+  }
+
   async function saveConfig(nextConfig) {
     /*
      * 先持久化，再用共享配置模块返回的规范化配置重新渲染。
@@ -280,7 +326,8 @@
     /*
      * 设置变化的集中处理器。网络 / 账号类风险功能在保存新值前会显式确认。
      */
-    const next = CONFIG.setByPath(config, path, value);
+    const next = CONFIG.deepClone(config);
+    assignPath(next, path, value);
 
     if (path === "blacklist.accountBlockEnabled" && value && !confirm("账号拉黑会调用 B 站接口并修改你的账号关系，确认开启？")) {
       return;
@@ -294,7 +341,42 @@
       next.player.defaultLightsOff = true;
     }
 
+    if (MIRRORED_SWITCHES[path]) {
+      assignPath(next, MIRRORED_SWITCHES[path], value);
+    }
+
+    if (path === "blacklist.accountBlockEnabled" && !value) {
+      assignPath(next, "blacklist.showAccountButton", false);
+    }
+
     await saveConfig(next);
+  }
+
+  function manifestInfo() {
+    /*
+     * 关于页使用浏览器运行时清单读取真实版本号。
+     * 如果在非扩展环境预览，则回退到当前项目约定版本。
+     */
+    if (globalThis.chrome && chrome.runtime && chrome.runtime.getManifest) {
+      return chrome.runtime.getManifest();
+    }
+
+    return { name: "BilibiliToys", version: "0.0.1" };
+  }
+
+  function moduleSwitchForSection(sectionId) {
+    /*
+     * 模块页顶部总开关和基本设置中的模块开关使用同一路径，
+     * 因此任一处切换后，另一处会天然保持同步。
+     */
+    const moduleName = MODULE_BY_SECTION[sectionId];
+    const section = sections.find((item) => item.id === sectionId);
+
+    if (!moduleName || !section) {
+      return null;
+    }
+
+    return switchSetting(`modules.${moduleName}`, `启用${section.label}模块`, section.description);
   }
 
   function renderNav() {
@@ -394,7 +476,6 @@
     const body = document.getElementById("sectionBody");
     body.textContent = "";
 
-    body.appendChild(renderSetting(switchSetting("hotkeys.enabled", "启用扩展快捷键", "关闭后所有扩展快捷键不再响应。")));
     body.appendChild(renderSetting(switchSetting("hotkeys.disableAll", "禁用全部扩展快捷键", "临时关闭全部扩展快捷键。")));
     body.appendChild(renderSetting(switchSetting("hotkeys.spacePlayPause", "空格键始终播放 / 暂停", "输入框聚焦时不会触发。")));
 
@@ -777,14 +858,53 @@
     body.appendChild(settingsRow);
   }
 
+  function renderInfoRow(title, value, href) {
+    /*
+     * 关于页信息统一使用轻量行展示，保证邮箱、项目地址和许可证
+     * 在浅色 / 深色主题下都有一致的阅读节奏。
+     */
+    const row = create("div", "about-row");
+    const label = create("div", "about-label", title);
+    const content = href ? create("a", "about-link", value) : create("div", "about-value", value);
+
+    if (href) {
+      content.href = href;
+      content.target = "_blank";
+      content.rel = "noreferrer";
+    }
+
+    row.append(label, content);
+    return row;
+  }
+
+  function renderAboutSection() {
+    /*
+     * 关于页集中放置版本、联系方式、项目主页和许可证信息。
+     * 原高级设置中的许可证说明迁移到这里，避免高级设置承担说明文档职责。
+     */
+    const body = document.getElementById("sectionBody");
+    const manifest = manifestInfo();
+    body.textContent = "";
+
+    const panel = create("div", "about-panel");
+    panel.append(
+      renderInfoRow("软件名称", manifest.name || "BilibiliToys"),
+      renderInfoRow("软件版本", manifest.version || "0.0.1"),
+      renderInfoRow("联系邮箱", CONTACT_EMAIL, `mailto:${CONTACT_EMAIL}`),
+      renderInfoRow("GitHub 项目主页", PROJECT_URL, PROJECT_URL),
+      renderInfoRow("开源许可证", "MIT License"),
+      create("div", "notice", "BilibiliToys 使用 MIT 许可证发布。部分功能行为参考 Better Bilibili 2026.02.13 与 Bilibili Player Extension 3.0.2，并已在源码文件头标注。")
+    );
+
+    body.appendChild(panel);
+  }
+
   function renderAdvancedSection() {
     /*
-     * 高级章节用于放置许可证说明和恢复默认等不属于普通功能模块的操作。
+     * 高级章节只保留会影响配置的操作，说明类信息迁移到“关于”模块。
      */
     const body = document.getElementById("sectionBody");
     body.textContent = "";
-
-    body.appendChild(create("div", "notice", "BilibiliToys 使用 MIT 许可证发布。部分功能行为参考 Better Bilibili 2026.02.13 与 Bilibili Player Extension 3.0.2，并已在源码文件头标注。"));
 
     const resetRow = create("div", "setting-row");
     const text = create("div");
@@ -876,7 +996,17 @@
 
     document.getElementById("sectionTitle").textContent = section.label;
     document.getElementById("sectionDescription").textContent = section.description;
-    document.getElementById("globalEnabled").checked = config.enabled;
+    const moduleSwitch = moduleSwitchForSection(activeSection);
+    const moduleSwitchWrap = document.getElementById("moduleSwitchWrap");
+    const moduleEnabled = document.getElementById("moduleEnabled");
+    moduleSwitchWrap.hidden = !moduleSwitch;
+    if (moduleSwitch) {
+      moduleSwitchWrap.title = moduleSwitch.title;
+      moduleEnabled.checked = Boolean(CONFIG.getByPath(config, moduleSwitch.path));
+      moduleEnabled.dataset.configPath = moduleSwitch.path;
+    } else {
+      moduleEnabled.dataset.configPath = "";
+    }
     document.documentElement.dataset.theme = theme;
     document.getElementById("themeToggle").textContent = theme === "dark" ? "☀" : "☾";
 
@@ -888,6 +1018,8 @@
       renderShortcutsSection();
     } else if (activeSection === "data") {
       renderDataSection();
+    } else if (activeSection === "about") {
+      renderAboutSection();
     } else if (activeSection === "advanced") {
       renderAdvancedSection();
     } else {
@@ -901,7 +1033,12 @@
      * 再绑定静态 HTML 中长期存在的控件。
      */
     config = await CONFIG.readStorage();
-    document.getElementById("globalEnabled").addEventListener("change", (event) => setValue("enabled", event.target.checked));
+    document.getElementById("moduleEnabled").addEventListener("change", (event) => {
+      const path = event.target.dataset.configPath;
+      if (path) {
+        setValue(path, event.target.checked);
+      }
+    });
     document.getElementById("themeToggle").addEventListener("click", () => {
       theme = theme === "dark" ? "light" : "dark";
       localStorage.setItem("bilibili-toys-theme", theme);

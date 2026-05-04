@@ -154,6 +154,9 @@ body {
 }
 
 .content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   padding: 36px 72px 72px;
   width: var(--content-width);
 }
@@ -257,7 +260,7 @@ body {
 
 .content-header {
   /*
-   * 头部区域组合当前章节标题和扩展总开关。
+   * 头部区域组合当前章节标题和当前模块总开关。
    */
   align-items: center;
   background: var(--card);
@@ -286,6 +289,32 @@ h1 {
   display: flex;
   flex-direction: column;
   /* gap: 22px; */
+}
+
+.content-footer {
+  /*
+   * 中间内容区底部版权信息。它跟随当前模块内容滚动，
+   * 但始终保持与设置行相同的宽度和视觉节奏。
+   */
+  align-items: center;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.content-footer a,
+.about-link {
+  color: var(--accent-dark);
+  text-decoration: none;
+}
+
+.content-footer a:hover,
+.about-link:hover {
+  text-decoration: underline;
 }
 
 .setting-row {
@@ -319,6 +348,10 @@ h1 {
    */
   display: inline-flex;
   justify-self: end;
+}
+
+.switch[hidden] {
+  display: none;
 }
 
 .switch input {
@@ -498,6 +531,33 @@ kbd {
   border-radius: 4px;
   color: var(--muted);
   padding: 14px 16px;
+}
+
+.about-panel {
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+}
+
+.about-row {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 160px 1fr;
+  padding: 16px 18px;
+}
+
+.about-label {
+  color: var(--muted);
+}
+
+.about-value {
+  color: var(--text);
+}
+
+.about-panel .notice {
+  margin: 16px 18px;
 }
 
 .shortcut-dialog {
